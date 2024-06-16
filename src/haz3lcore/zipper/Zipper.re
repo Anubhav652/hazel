@@ -242,8 +242,7 @@ let destruct = (~destroy_kids=true, z: t): t => {
     |> List.partition(t =>
          Siblings.contains_matching(t, z.relatives.siblings)
          || Ancestors.parent_matches(t, z.relatives.ancestors)
-       );
-  /* If flag is set, break up tiles and remove children */
+       ) /* If flag is set, break up tiles and remove children */;
   let to_pick_up =
     destroy_kids
       ? List.map(Tile.disintegrate, to_pick_up) |> List.flatten : to_pick_up;
@@ -391,21 +390,10 @@ let is_linebreak_to_right_of_caret =
     ({relatives: {siblings: (_, r), _}, _}: t): bool => {
   switch (r) {
   | [Secondary(s), ..._] when Secondary.is_linebreak(s) => true
-  | _ => false
+  | _ => false /* Try to complete the syntax to give better semantic feeback. * This is a best-effort approach focussed on adding new definitions * as opposed to restructuring; it does not complete the syntax in * all cases. * * NOTE: Setting the caret to outer was necessary to 'get it past' * string literals, i.e. offer live feeback when typing inside a * string; not sure if this is a hack or not, it may be compensating * for the put_down logic not working right with string lits. To test, * try to look at live evaluation while typing inside a string lit with * stuff left to drop in backpack with below set: Outer disabled. */
   };
 };
 
-/* Try to complete the syntax to give better semantic feeback.
- * This is a best-effort approach focussed on adding new definitions
- * as opposed to restructuring; it does not complete the syntax in
- * all cases.
- *
- * NOTE: Setting the caret to outer was necessary to 'get it past'
- * string literals, i.e. offer live feeback when typing inside a
- * string; not sure if this is a hack or not, it may be compensating
- * for the put_down logic not working right with string lits. To test,
- * try to look at live evaluation while typing inside a string lit with
- * stuff left to drop in backpack with below set: Outer disabled. */
 let try_to_dump_backpack = (zipper: t) => {
   switch (zipper.backpack) {
   | [] => zipper

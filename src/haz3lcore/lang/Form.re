@@ -1,43 +1,23 @@
 open Sexplib.Std;
 open Mold;
-module P = Precedence;
-
-/* FORM
-   This module determines the syntactic extent of the language; the
-   entire Syntax module is driven by the below definitions. Adding
-   a new syntactic form is simply a matter of adding a new line to either
-   the 'convex_monos' table, for single-token forms, or the 'forms'
-   table, for compound forms.
-   The wrapping functions seen in both of those tables determine the
-   shape, precedence, and expansion behavior of the form. */
+module P = Precedence /* FORM   This module determines the syntactic extent of the language; the   entire Syntax module is driven by the below definitions. Adding   a new syntactic form is simply a matter of adding a new line to either   the 'convex_monos' table, for single-token forms, or the 'forms'   table, for compound forms.   The wrapping functions seen in both of those tables determine the   shape, precedence, and expansion behavior of the form. */;
 
 let regexp = (r, s) =>
   Js_of_ocaml.Regexp.string_match(Js_of_ocaml.Regexp.regexp(r), s, 0)
-  |> Option.is_some;
+  |> Option.is_some /* A label is the textual expression of a form's delimiters */;
 
-/* A label is the textual expression of a form's delimiters */
 [@deriving (show({with_path: false}), sexp, yojson)]
-type label = list(Token.t);
-
-/* The construction of a compound forms can be triggered by inserting
-   one of its delimiters through a process called expansion. Expansion
-   can either occur (Instant)ly upon delimiter creation, or be (Delayed)
-   until after a token boundary event is triggered (say by pressing
-   space after entering 'let'). The (Static) case is used for monos
-   aka single-token forms. */
+type label = list(Token.t) /* The construction of a compound forms can be triggered by inserting   one of its delimiters through a process called expansion. Expansion   can either occur (Instant)ly upon delimiter creation, or be (Delayed)   until after a token boundary event is triggered (say by pressing   space after entering 'let'). The (Static) case is used for monos   aka single-token forms. */;
 
 [@deriving (show({with_path: false}), sexp, yojson)]
 type expansion_time =
   | Static
   | Instant
-  | Delayed;
+  | Delayed /* Expansion can be triggered by either/both the first or last token   of a form, represented here by the first/last elements of this pair. */;
 
-/* Expansion can be triggered by either/both the first or last token
-   of a form, represented here by the first/last elements of this pair. */
 [@deriving (show({with_path: false}), sexp, yojson)]
-type expansion = (expansion_time, expansion_time);
+type expansion = (expansion_time, expansion_time) /* A label, a mold, and expansion behavior together determine a form. */;
 
-/* A label, a mold, and expansion behavior together determine a form. */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type t = {
   label,
@@ -50,9 +30,8 @@ type bad_token_cls =
   | Other
   | BadInt;
 
-let mk = (expansion, label, mold) => {label, mold, expansion};
+let mk = (expansion, label, mold) => {label, mold, expansion} /* Abbreviations for expansion behaviors */;
 
-/* Abbreviations for expansion behaviors */
 let ss: expansion = (Static, Static);
 let ii: expansion = (Instant, Instant);
 let is: expansion = (Instant, Static);
@@ -62,26 +41,17 @@ let mk_infix = (t: Token.t, sort: Sort.t, prec) =>
   mk(ss, [t], mk_bin(prec, sort, []));
 
 let mk_nul_infix = (t: Token.t, prec) =>
-  mk(ss, [t], mk_bin(~l=Any, ~r=Any, prec, Any, []));
+  mk(ss, [t], mk_bin(~l=Any, ~r=Any, prec, Any, [])) /* A. Secondary Notation (Comments, Whitespace, etc.)  */ /* Token Recognition Predicates */;
 
-/* Token Recognition Predicates */
+let space = " " /* HACK(andrew): Using ⏎ char to represent linebreak to avoid regexp   issues with using \n. Someone who understands regexps better   should fix this. */;
 
-/* A. Secondary Notation (Comments, Whitespace, etc.)  */
-let space = " ";
-/* HACK(andrew): Using ⏎ char to represent linebreak to avoid regexp
-   issues with using \n. Someone who understands regexps better
-   should fix this. */
 let linebreak = "⏎";
-let comment_regexp = "^#[^#⏎]*#$"; /* Multiline comments not supported */
+let comment_regexp = "^#[^#⏎]*#$" /* Multiline comments not supported */;
 let is_comment = t => regexp(comment_regexp, t) || t == "#";
 let is_comment_delim = t => t == "#";
 let is_secondary = t =>
-  List.mem(t, [space, linebreak]) || regexp(comment_regexp, t);
+  List.mem(t, [space, linebreak]) || regexp(comment_regexp, t) /* is_string: last clause is a somewhat hacky way of making sure   there are at most two quotes, in order to prevent merges */ /* STRINGS: special-case syntax */;
 
-/* STRINGS: special-case syntax */
-
-/* is_string: last clause is a somewhat hacky way of making sure
-   there are at most two quotes, in order to prevent merges */
 let is_string = t =>
   regexp("^\"[^⏎]*\"$", t)
   && List.length(String.split_on_char('"', t)) < 4;
@@ -113,15 +83,10 @@ let keywords = [
 let reserved_keywords = ["of", "when", "with", "switch", "match"];
 let is_keyword = regexp("^(" ++ String.concat("|", keywords) ++ ")$");
 let is_reserved_keyword =
-  regexp("^(" ++ String.concat("|", reserved_keywords) ++ ")$");
+  regexp("^(" ++ String.concat("|", reserved_keywords) ++ ")$") /* Potential tokens: These are fallthrough classes which determine * the behavior when inserting a character in contact with a token */;
 
-/* Potential tokens: These are fallthrough classes which determine
- * the behavior when inserting a character in contact with a token */
-let is_potential_operand = regexp("^[a-zA-Z0-9_'\\.?]+$");
-/* Anything else is considered a potential operator, as long
- *  as it does not contain any whitespace, linebreaks, comment
- *  delimiters, string delimiters, or the instant expanding paired
- *  delimiters: ()[]| */
+let is_potential_operand = regexp("^[a-zA-Z0-9_'\\.?]+$") /* Anything else is considered a potential operator, as long *  as it does not contain any whitespace, linebreaks, comment *  delimiters, string delimiters, or the instant expanding paired *  delimiters: ()[]| */;
+
 let is_potential_operator = regexp("^[^a-zA-Z0-9_'?\"#⏎\\s\\[\\]\\(\\)]+$");
 let is_potential_token = t =>
   is_potential_operand(t)
@@ -132,16 +97,10 @@ let is_potential_token = t =>
 let is_arbitary_int = regexp("^-?\\d+[0-9_]*$");
 let is_arbitary_float = x =>
   x != "." && x != "-" && regexp("^-?[0-9]*\\.?[0-9]*((e|E)-?[0-9]*)?$", x);
-let is_int = str => is_arbitary_int(str) && int_of_string_opt(str) != None;
-/* NOTE: The is_arbitary_int check is necessary to prevent
-   minuses from being parsed as part of the int token. */
+let is_int = str => is_arbitary_int(str) && int_of_string_opt(str) != None /* NOTE: The is_arbitary_int check is necessary to prevent   minuses from being parsed as part of the int token. */;
 
-let is_bad_int = str => is_arbitary_int(str) && !is_int(str);
+let is_bad_int = str => is_arbitary_int(str) && !is_int(str) /* NOTE: As well as making is_float  disjoint from is_int,   the is_arbitary_int  also prevents ints over int_max from being   cast as floats. The is_arbitary_float check is necessary to prevent   minuses from being parsed as part of the float token. */;
 
-/* NOTE: As well as making is_float  disjoint from is_int,
-   the is_arbitary_int  also prevents ints over int_max from being
-   cast as floats. The is_arbitary_float check is necessary to prevent
-   minuses from being parsed as part of the float token. */
 let is_float = str =>
   !is_arbitary_int(str)
   && is_arbitary_float(str)
@@ -165,26 +124,20 @@ let base_typs = ["String", "Int", "Float", "Bool"];
 let is_base_typ = regexp("^(" ++ String.concat("|", base_typs) ++ ")$");
 let is_typ_var = str => is_var(str) || is_capitalized_name(str);
 let wild = "_";
-let is_wild = regexp("^" ++ wild ++ "$");
+let is_wild = regexp("^" ++ wild ++ "$") /* List literals */;
 
-/* List literals */
 let list_start = "[";
 let list_end = "]";
 let listlit_lbl = [list_start, list_end];
 let empty_list = list_start ++ list_end;
-let is_empty_list = (==)(empty_list);
+let is_empty_list = (==)(empty_list) /* Tuples */;
 
-/* Tuples */
 let tuple_start = "(";
 let tuple_end = ")";
 let tuple_lbl = [tuple_start, tuple_end];
 let empty_tuple = tuple_start ++ tuple_end;
-let is_empty_tuple = (==)(empty_tuple);
+let is_empty_tuple = (==)(empty_tuple) /* These functions determine which forms can switch back and forth between   mono and duotile forms, like list literals and tuples switching to/from   the empty list and empty tuple. Technically this should be derivable from   the language data; leaving that for a future refactor. */;
 
-/* These functions determine which forms can switch back and forth between
-   mono and duotile forms, like list literals and tuples switching to/from
-   the empty list and empty tuple. Technically this should be derivable from
-   the language data; leaving that for a future refactor. */
 let duosplits = (t: Token.t): Label.t =>
   switch () {
   | _ when is_empty_list(t) => listlit_lbl
@@ -210,11 +163,10 @@ let bad_token_cls: string => bad_token_cls =
     switch () {
     | _ when is_bad_int(t) => BadInt
     | _ => Other
-    };
-
-/* B. Operands:
+    } /* B. Operands:
    Order in this list determines relative remolding
-   priority for forms with overlapping regexps */
+   priority for forms with overlapping regexps */;
+
 let atomic_forms: list((string, (string => bool, list(Mold.t)))) = [
   ("var", (is_var, [mk_op(Exp, []), mk_op(Pat, [])])),
   (
@@ -239,11 +191,9 @@ let atomic_forms: list((string, (string => bool, list(Mold.t)))) = [
   ("ty_var_p", (is_typ_var, [mk_op(TPat, [])])),
   ("ctr", (is_ctr, [mk_op(Exp, []), mk_op(Pat, [])])),
   ("type", (is_base_typ, [mk_op(Typ, [])])),
-];
-
-/* C. Compound Forms:
+] /* C. Compound Forms:
    Order in this list determines relative remolding
-   priority for forms which share the same labels */
+   priority for forms which share the same labels */;
 
 let forms: list((string, t)) = [
   // INFIX OPERATORS

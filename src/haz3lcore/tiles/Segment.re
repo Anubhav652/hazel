@@ -454,17 +454,13 @@ module Trim = {
     };
 
   let add_grout = (~d: Direction.t, shape: Nib.Shape.t, (wss, gs): t): t => {
-    let g = Grout.mk_fits_shape(shape);
-    /* When adding a grout to the left, consume a space. Note
-       changes made to the logic here should also take into
-       account the other direction in 'regrout' below */
+    let g = Grout.mk_fits_shape(shape) /* When adding a grout to the left, consume a space. Note   changes made to the logic here should also take into   account the other direction in 'regrout' below */;
+
     let wss' =
       switch (d) {
       /* Right Convex e.g. Backspace `1| + 2` => `|<> + 2` (Don't consume) */
       /* Right Concave e.g. Backspace `1 +| 1` => `1 |>< 1` (Don't consume) */
-      | Right => wss
-      /* Left Convex e.g. Insert Space `[|]` => `[ |]` => `[<>|]` (Consume) */
-      /* Left Concave e.g. Insert "i" `let a = 1 i|` => `let a = 1><i|` (Consume) */
+      | Right => wss /* Left Concave e.g. Insert "i" `let a = 1 i|` => `let a = 1><i|` (Consume) */ /* Left Convex e.g. Insert Space `[|]` => `[ |]` => `[<>|]` (Consume) */
       | Left => rm_up_to_one_space(wss)
       };
     cons_g(g, (wss', gs));
@@ -473,10 +469,8 @@ module Trim = {
   // assumes grout in trim fit r but may not fit l
   let regrout = (d: Direction.t, (l, r): Nibs.shapes, trim: t): t =>
     if (Nib.Shape.fits(l, r)) {
-      let (wss, gs) = trim;
-      /* When removing a grout to the Left, add a space. Note
-         changes made to the logic here should also take into
-         account the other direction in 'add_grout' above */
+      let (wss, gs) = trim /* When removing a grout to the Left, add a space. Note   changes made to the logic here should also take into   account the other direction in 'add_grout' above */;
+
       let new_spaces =
         List.filter_map(
           (g: Grout.t) => {
@@ -492,15 +486,7 @@ module Trim = {
             }
           },
           gs,
-        );
-      /* Note below that it is important that we add the new spaces
-         before the existing wss, as doing otherwise may result
-         in the new spaces ending up leading a line. This approach is
-         somewhat hacky; we may just want to remove all the spaces
-         whenever there is a linebreak; not making this chance now
-         as I'm worried about it introducing subtle jank */
-
-      /* David PR comment:
+        ) /* David PR comment:
          All these changes assume the trim is ordered left-to-right,
          but this may not be true when Trim.regrout is called by
          regrout_affix(Left, ...) below, which reverses the affix before
@@ -511,7 +497,13 @@ module Trim = {
          from regrout_affix into Trim.regrout and appending to correct side.
          Similar threading for add_grout. That said, I couldn't trigger any
          undesirable behavior with these changes and am fine with going ahead
-         with this for now. */
+         with this for now. */ /* Note below that it is important that we add the new spaces
+         before the existing wss, as doing otherwise may result
+         in the new spaces ending up leading a line. This approach is
+         somewhat hacky; we may just want to remove all the spaces
+         whenever there is a linebreak; not making this chance now
+         as I'm worried about it introducing subtle jank */;
+
       let wss = [new_spaces @ List.concat(wss)];
       Aba.mk(wss, []);
     } else {

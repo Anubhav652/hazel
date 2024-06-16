@@ -1,7 +1,6 @@
 open Haz3lcore;
-include UpdateAction;
+include UpdateAction /* NOTE: this is duplicated from Update */;
 
-/* NOTE: this is duplicated from Update */
 let perform_action = (model: Model.t, a: Action.t): Result.t(Model.t) => {
   let ed_init = Editors.get_editor(model.editors);
   switch (Haz3lcore.Perform.go(~settings=model.settings.core, a, ed_init)) {
@@ -56,9 +55,8 @@ let apply =
     | Buffer(Parsed) => perform_action(model, Unselect(Some(Right)))
     | Buffer(Unparsed) =>
       switch (TyDi.get_buffer(z)) {
-      | None => Ok(model)
-      /* This case shouldn't happen if we assume that we prevalidate
-       * everything we put in the unparsed buffer*/
+      | None => Ok(model) /* This case shouldn't happen if we assume that we prevalidate * everything we put in the unparsed buffer*/
+
       | Some(completion) when String.contains(completion, ' ') =>
         /* Slightly hacky. We assume that if a completion string has
          * spaces in it, that means it will have a hole in it. This
@@ -77,9 +75,9 @@ let apply =
             | Error(err) => Error(err)
             | Ok(model) => do_actions(model, tl)
             }
-          };
-        /* TODO(andrew): use zipper-level actions here to avoid
-         * measured recomputation at editor-level */
+          } /* TODO(andrew): use zipper-level actions here to avoid
+         * measured recomputation at editor-level */;
+
         do_actions(
           model,
           [

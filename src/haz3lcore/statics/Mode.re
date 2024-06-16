@@ -1,21 +1,5 @@
 open Util;
-open OptUtil.Syntax;
-
-/* MODE.re
-
-     This module defines the (analytic) type expectation imposed by a term's
-      syntactic context, in particular its immediate parent. The most common
-      cases are either Syn (no type expectation), or Ana (some type expectation).
-
-      A term's MODE is used in combination with that term's SELF (Self.re) by
-      to determine that term's STATUS (Info.re), which dictates whether or not
-      it is placed in a hole, and hence its FIXED TYPE (Info.re).
-
-      (It is conjectured [citation needed] that the Syn mode is functionally
-      indistinguishable from Ana(Unknown(SynSwitch)), and that this type is
-      thus vestigial.)
-
-   */
+open OptUtil.Syntax /* MODE.re           This module defines the (analytic) type expectation imposed by a term's         syntactic context, in particular its immediate parent. The most common         cases are either Syn (no type expectation), or Ana (some type expectation).            A term's MODE is used in combination with that term's SELF (Self.re) by         to determine that term's STATUS (Info.re), which dictates whether or not         it is placed in a hole, and hence its FIXED TYPE (Info.re).            (It is conjectured [citation needed] that the Syn mode is functionally         indistinguishable from Ana(Unknown(SynSwitch)), and that this type is         thus vestigial.)         */;
 
 [@deriving (show({with_path: false}), sexp, yojson)]
 type t =
@@ -24,15 +8,14 @@ type t =
   | Syn
   | Ana(Typ.t);
 
-let ana: Typ.t => t = ty => Ana(ty);
+let ana: Typ.t => t = ty => Ana(ty) /* The expected type imposed by a mode */;
 
-/* The expected type imposed by a mode */
 let ty_of: t => Typ.t =
   fun
   | Ana(ty) => ty
   | Syn => Unknown(SynSwitch)
   | SynFun => Arrow(Unknown(SynSwitch), Unknown(SynSwitch))
-  | SynTypFun => Forall("syntypfun", Unknown(SynSwitch)); /* TODO: naming the type variable? */
+  | SynTypFun => Forall("syntypfun", Unknown(SynSwitch)) /* TODO: naming the type variable? */;
 
 let of_arrow = (ctx: Ctx.t, mode: t): (t, t) =>
   switch (mode) {

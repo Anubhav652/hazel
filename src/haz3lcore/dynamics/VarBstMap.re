@@ -2,9 +2,8 @@ open Sexplib.Std;
 module Sexp = Sexplib.Sexp;
 
 module Inner = {
-  include Map.Make(Var);
+  include Map.Make(Var) /* See IntMap */;
 
-  /* See IntMap */
   [@deriving (sexp, yojson)]
   type binding('v) = (Var.t, 'v);
 

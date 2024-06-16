@@ -1,24 +1,9 @@
 open Sexplib.Std;
-open Haz3lcore;
-
-/* MODEL:
-
-      The model consists of three broad categories. Editors is the meat,
-      containing the code content and cursor/selection/buffer state for all
-      active editors. Settings are user-selectable preferences. Together,
-      these two comprise the persistent state of the application which is
-      saved to localstore.
-
-      Meta on the other hand consists of everything which is not
-      peristant, including transitory ui_state such as whether the mouse
-      is held down.
-
-   */
+open Haz3lcore /* MODEL:            The model consists of three broad categories. Editors is the meat,         containing the code content and cursor/selection/buffer state for all         active editors. Settings are user-selectable preferences. Together,         these two comprise the persistent state of the application which is         saved to localstore.            Meta on the other hand consists of everything which is not         peristant, including transitory ui_state such as whether the mouse         is held down.         */;
 
 [@deriving (show({with_path: false}), yojson, sexp)]
-type timestamp = float;
+type timestamp = float /* Non-persistent application state */;
 
-/* Non-persistent application state */
 [@deriving (show({with_path: false}), yojson, sexp)]
 type ui_state = {
   font_metrics: FontMetrics.t,

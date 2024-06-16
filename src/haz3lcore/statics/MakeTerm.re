@@ -1,14 +1,14 @@
 /* MAKETERM
 
-     This parses tile structure into term structure.
-     The language syntax, as determined by Form.re, is an
-     open, data-driven system, so adding a syntactic form
-     there will not trigger a static error here; you must
-     remember to add a case below for each new form added
-     to the syntax.
+                    This parses tile structure into term structure.
+                    The language syntax, as determined by Form.re, is an
+                    open, data-driven system, so adding a syntactic form
+                    there will not trigger a static error here; you must
+                    remember to add a case below for each new form added
+                    to the syntax.
 
-     WARNING: This module is still structurally in flux.
-   */
+                    WARNING: This module is still structurally in flux.
+                  */
 
 open Util;
 open Term;
@@ -381,10 +381,10 @@ and typ_term: unsorted => (UTyp.term, list(Id.t)) = {
     switch (tiles) {
     | ([(_, (["(", ")"], [Typ(typ)]))], []) => ret(Ap(t, typ))
     | _ => ret(hole(tm))
-    }
-  /* forall and rec have to be before sum so that they bind tighter.
+    } /* forall and rec have to be before sum so that they bind tighter.
    * Thus `rec A -> Left(A) + Right(B)` get parsed as `rec A -> (Left(A) + Right(B))`
    * If this is below the case for sum, then it gets parsed as an invalid form. */
+
   | Pre(([(_id, (["forall", "->"], [TPat(tpat)]))], []), Typ(t)) =>
     ret(Forall(tpat, t))
   | Pre(([(_id, (["rec", "->"], [TPat(tpat)]))], []), Typ(t)) =>

@@ -71,11 +71,9 @@ module rec DHExp: {
     | NonEmptyHole(ErrStatus.HoleReason.t, MetaVar.t, HoleInstanceId.t, t)
     | FreeVar(MetaVar.t, HoleInstanceId.t, Var.t)
     | InvalidText(MetaVar.t, HoleInstanceId.t, string)
-    | InconsistentBranches(MetaVar.t, HoleInstanceId.t, case)
-    /* Generalized closures */
+    | InconsistentBranches(MetaVar.t, HoleInstanceId.t, case) /* Generalized closures */
     | Closure(ClosureEnvironment.t, t)
-    | Filter(DHFilter.t, t)
-    /* Other expressions forms */
+    | Filter(DHFilter.t, t) /* Other expressions forms */
     | BoundVar(Var.t)
     | Sequence(t, t)
     | Let(DHPat.t, t, t)
@@ -227,16 +225,14 @@ module rec DHExp: {
   let rec fast_equal = (d1: t, d2: t): bool => {
     switch (d1, d2) {
     /* Primitive forms: regular structural equality */
-    | (BoundVar(_), _)
-    /* TODO: Not sure if this is right... */
+    | (BoundVar(_), _) /* TODO: Not sure if this is right... */
     | (BoolLit(_), _)
     | (IntLit(_), _)
     | (FloatLit(_), _)
     | (Constructor(_), _) => d1 == d2
     | (StringLit(s1), StringLit(s2)) => String.equal(s1, s2)
-    | (StringLit(_), _) => false
+    | (StringLit(_), _) => false /* Non-hole forms: recurse */
 
-    /* Non-hole forms: recurse */
     | (Test(id1, d1), Test(id2, d2)) => id1 == id2 && fast_equal(d1, d2)
     | (Sequence(d11, d21), Sequence(d12, d22)) =>
       fast_equal(d11, d12) && fast_equal(d21, d22)
@@ -284,9 +280,8 @@ module rec DHExp: {
       c1 == c2
       && fast_equal(d11, d21)
       && fast_equal(d12, d22)
-      && fast_equal(d13, d23)
-    /* We can group these all into a `_ => false` clause; separating
-       these so that we get exhaustiveness checking. */
+      && fast_equal(d13, d23) /* We can group these all into a `_ => false` clause; separating   these so that we get exhaustiveness checking. */
+
     | (Sequence(_), _)
     | (Filter(_), _)
     | (Let(_), _)
@@ -311,12 +306,9 @@ module rec DHExp: {
     | (FailedCast(_), _)
     | (InvalidOperation(_), _)
     | (IfThenElse(_), _)
-    | (ConsistentCase(_), _) => false
+    | (ConsistentCase(_), _) =>
+      false /* Hole forms: when checking environments, only check that          environment ID's are equal, don't check structural equality.             (This resolves a performance issue with many nested holes.) */
 
-    /* Hole forms: when checking environments, only check that
-       environment ID's are equal, don't check structural equality.
-
-       (This resolves a performance issue with many nested holes.) */
     | (EmptyHole(u1, i1), EmptyHole(u2, i2)) => u1 == u2 && i1 == i2
     | (NonEmptyHole(reason1, u1, i1, d1), NonEmptyHole(reason2, u2, i2, d2)) =>
       reason1 == reason2 && u1 == u2 && i1 == i2 && fast_equal(d1, d2)
@@ -501,10 +493,9 @@ and ClosureEnvironment: {
   let of_environment = map => {
     let ei = Id.mk();
     wrap(ei, map);
-  };
+  } /* Equals only needs to check environment id's (faster than structural equality
+   * checking.) */;
 
-  /* Equals only needs to check environment id's (faster than structural equality
-   * checking.) */
   let id_equal = (env1, env2) => id_of(env1) == id_of(env2);
 
   let empty = Environment.empty |> of_environment;

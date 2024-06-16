@@ -1,36 +1,36 @@
 /* ID FAQ
 
-   WHATS AN ID?
+                  WHATS AN ID?
 
-   IDs are random-generated 128bit UUIDs; use Id.mk() to generate one.
+                  IDs are random-generated 128bit UUIDs; use Id.mk() to generate one.
 
-   WHAT ARE IDS USED FOR?
+                  WHAT ARE IDS USED FOR?
 
-   Unique ids are assigned to tiles (and hence, indirectly, to terms)
-   at the time of creation of surface syntax. Ids are used as keys in
-   various maps (mostly notably the Measured map, which tracks screen
-   coordinates for the view, and the Info map which collects static
-   data such as type information). Ids are used for many zipper actions,
-   including jump to definition, and are also used to coordinate term
-   decorations. Accidentally creating non-unique IDs can be the cause
-   of many odd issues for zipper actions and display.
+                  Unique ids are assigned to tiles (and hence, indirectly, to terms)
+                  at the time of creation of surface syntax. Ids are used as keys in
+                  various maps (mostly notably the Measured map, which tracks screen
+                  coordinates for the view, and the Info map which collects static
+                  data such as type information). Ids are used for many zipper actions,
+                  including jump to definition, and are also used to coordinate term
+                  decorations. Accidentally creating non-unique IDs can be the cause
+                  of many odd issues for zipper actions and display.
 
-   BUT WHY IS THERE A _LIST_ OF IDS?
+                  BUT WHY IS THERE A _LIST_ OF IDS?
 
-   Technically, each tile has a list of ids, to support n-ary forms like
-   tuples; there are rep_id functions in Term to canonically extract
-   single representative ids from this list where appropriate.
+                  Technically, each tile has a list of ids, to support n-ary forms like
+                  tuples; there are rep_id functions in Term to canonically extract
+                  single representative ids from this list where appropriate.
 
-   CAN I USE IDS IN DYNAMICS?
+                  CAN I USE IDS IN DYNAMICS?
 
-   Currently, DHExps (as produced by the elaborator and produced/consumed
-   by the evaluator) do not in general persist ids; the exceptions are
-   things like holes and tests which have additional metadata which is
-   accumulated duting evaluation. There are many use cases for tracking
-   ids more generally during evaluation, but doing so in a principled
-   way is a large-scale change with architectural implications.
+                  Currently, DHExps (as produced by the elaborator and produced/consumed
+                  by the evaluator) do not in general persist ids; the exceptions are
+                  things like holes and tests which have additional metadata which is
+                  accumulated duting evaluation. There are many use cases for tracking
+                  ids more generally during evaluation, but doing so in a principled
+                  way is a large-scale change with architectural implications.
 
-   */
+                  */
 
 [@deriving (show({with_path: false}), sexp, yojson)]
 let sexp_of_t: Uuidm.t => Sexplib.Sexp.t =
@@ -105,9 +105,8 @@ module Map = {
        );
 };
 let invalid: t =
-  "00000000-0000-0000-0000-000000000000" |> Uuidm.of_string |> Option.get;
+  "00000000-0000-0000-0000-000000000000" |> Uuidm.of_string |> Option.get /* Special id used to denote a trivial (empty) function application */;
 
-/* Special id used to denote a trivial (empty) function application */
 let nullary_ap_flag: t =
   "DEADBEEF-0000-0000-0000-000000000000" |> Uuidm.of_string |> Option.get;
 

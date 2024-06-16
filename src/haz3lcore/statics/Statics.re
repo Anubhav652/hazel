@@ -1,34 +1,4 @@
-open Term;
-
-/* STATICS.re
-
-   This module determines the statics semantics of a program.
-   It makes use of the following modules:
-
-   INFO.re: Defines the Info.t type which is used to represent the
-   static STATUS of a term. This STATUS can be either OK or ERROR,
-   and is determined by reconcilling two sources of typing information,
-   the MODE and the SELF.
-
-   MODE.re: Defines the Mode.t type which is used to represent the
-   typing expectations imposed by a term's ancestors.
-
-   SELF.re: Define the Self.t type which is used to represent the
-   type information derivable from the term itself.
-
-   The point of STATICS.re itself is to derive a map between each
-   term's unique id and that term's static INFO. The below functions
-   are intended mostly as infrastructure: The point is to define a
-   traversal through the syntax tree which, for each term, passes
-   down the MODE, passes up the SELF, calculates the INFO, and adds
-   it to the map.
-
-   The architectural intention here is that most type-manipulation
-   logic is defined in INFO, MODE, and SELF, and the STATICS module
-   itself is dedicated to the piping necessary to (A) introduce and
-   (B) propagate the necessary information through the syntax tree.
-
-    */
+open Term /* STATICS.re         This module determines the statics semantics of a program.      It makes use of the following modules:         INFO.re: Defines the Info.t type which is used to represent the      static STATUS of a term. This STATUS can be either OK or ERROR,      and is determined by reconcilling two sources of typing information,      the MODE and the SELF.         MODE.re: Defines the Mode.t type which is used to represent the      typing expectations imposed by a term's ancestors.         SELF.re: Define the Self.t type which is used to represent the      type information derivable from the term itself.         The point of STATICS.re itself is to derive a map between each      term's unique id and that term's static INFO. The below functions      are intended mostly as infrastructure: The point is to define a      traversal through the syntax tree which, for each term, passes      down the MODE, passes up the SELF, calculates the INFO, and adds      it to the map.         The architectural intention here is that most type-manipulation      logic is defined in INFO, MODE, and SELF, and the STATICS module      itself is dedicated to the piping necessary to (A) introduce and      (B) propagate the necessary information through the syntax tree.          */;
 
 module Info = Info;
 
@@ -344,8 +314,7 @@ and uexp_to_info_map =
     let (mode_pat, mode_body) = Mode.of_arrow(ctx, mode);
     let (p', _) =
       go_pat(~is_synswitch=false, ~co_ctx=CoCtx.empty, ~mode=mode_pat, p, m);
-    let (e, m) = go'(~ctx=p'.ctx, ~mode=mode_body, e, m);
-    /* add co_ctx to pattern */
+    let (e, m) = go'(~ctx=p'.ctx, ~mode=mode_body, e, m) /* add co_ctx to pattern */;
     let (p, m) =
       go_pat(~is_synswitch=false, ~co_ctx=e.co_ctx, ~mode=mode_pat, p, m);
     // TODO: factor out code
@@ -389,8 +358,7 @@ and uexp_to_info_map =
       } else {
         let (def_base, _) =
           go'(~ctx=p_syn.ctx, ~mode=Ana(p_syn.ty), def, m);
-        let ty_p_ana = def_base.ty;
-        /* Analyze pattern to incorporate def type into ctx */
+        let ty_p_ana = def_base.ty /* Analyze pattern to incorporate def type into ctx */;
         let (p_ana', _) =
           go_pat(
             ~is_synswitch=false,
@@ -416,8 +384,7 @@ and uexp_to_info_map =
         let (def, m) = go'(~ctx=def_ctx, ~mode=Ana(ana), def, m);
         (def, def_ctx, m, ty_p_ana);
       };
-    let (body, m) = go'(~ctx=p_ana_ctx, ~mode, body, m);
-    /* add co_ctx to pattern */
+    let (body, m) = go'(~ctx=p_ana_ctx, ~mode, body, m) /* add co_ctx to pattern */;
     let (p_ana, m) =
       go_pat(
         ~is_synswitch=false,
@@ -576,17 +543,19 @@ and uexp_to_info_map =
           /* NOTE: When debugging type system issues it may be beneficial to
              use a different name than the alias for the recursive parameter */
           //let ty_rec = Typ.Rec("α", Typ.subst(Var("α"), name, ty_pre));
+
           let ty_rec = Typ.Rec(name, ty_pre);
           let ctx_def =
             Ctx.extend_alias(ctx, name, UTPat.rep_id(typat), ty_rec);
           (ty_rec, ctx_def, ctx_def);
         | _ =>
           let ty = UTyp.to_typ(ctx, utyp);
-          (ty, ctx, Ctx.extend_alias(ctx, name, UTPat.rep_id(typat), ty));
+          (
+            ty,
+            ctx,
+            Ctx.extend_alias(ctx, name, UTPat.rep_id(typat), ty) /* NOTE(yuchen): Below is an alternative implementation that attempts to   add a rec whenever type alias is present. It may cause trouble to the   runtime, so precede with caution. */,
+          );
         };
-        /* NOTE(yuchen): Below is an alternative implementation that attempts to
-           add a rec whenever type alias is present. It may cause trouble to the
-           runtime, so precede with caution. */
         // Typ.lookup_surface(ty_pre)
         //   ? {
         //     let ty_rec = Typ.Rec({item: ty_pre, name});
@@ -604,8 +573,7 @@ and uexp_to_info_map =
         | None => ctx_body
         };
       let ({co_ctx, ty: ty_body, _}: Info.exp, m) =
-        go'(~ctx=ctx_body, ~mode, body, m);
-      /* Make sure types don't escape their scope */
+        go'(~ctx=ctx_body, ~mode, body, m) /* Make sure types don't escape their scope */;
       let ty_escape = Typ.subst(ty_def, name, ty_body);
       let m = utyp_to_info_map(~ctx=ctx_def, ~ancestors, utyp, m) |> snd;
       add(~self=Just(ty_escape), ~co_ctx, m);

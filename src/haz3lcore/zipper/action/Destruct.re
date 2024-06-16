@@ -19,10 +19,8 @@ let destruct =
     Option.map(Zipper.construct(~caret=Left, ~backpack=Left, l), s);
   switch (d, caret, neighbor_monotiles((l_sibs, r_sibs))) {
   /* When there's a selection, defer to Outer */
-  | _ when z.selection.content != [] => z |> Zipper.destruct |> Option.some
-  /* Special cases for mono forms which can split into duo forms,
-     e.g. list literals. When deletion would alter the mono form,
-     we replace it to the corresponding duo form.  */
+  | _ when z.selection.content != [] => z |> Zipper.destruct |> Option.some /* Special cases for mono forms which can split into duo forms,   e.g. list literals. When deletion would alter the mono form,   we replace it to the corresponding duo form.  */
+
   | (Left, Outer, (Some(t), _)) when Form.duosplits(t) != [] =>
     z |> delete_left |> construct_left(Form.duosplits(t))
   | (Right, Outer, (_, Some(t))) when Form.duosplits(t) != [] =>
@@ -31,9 +29,8 @@ let destruct =
     z |> delete_right |> construct_right(Form.duosplits(t))
   | (Right, Inner(_, n), (_, Some(t)))
       when Form.duosplits(t) != [] && n == last_inner_pos(t) =>
-    z |> delete_right |> construct_left(Form.duosplits(t))
-  /* Special cases for string literals. When deletion would
-     remove an outer quote, we instead remove the whole string */
+    z |> delete_right |> construct_left(Form.duosplits(t)) /* Special cases for string literals. When deletion would   remove an outer quote, we instead remove the whole string */
+
   | (Left, Outer, (Some(t), _))
       when Form.is_string(t) || Form.is_comment(t) =>
     delete_left(z)
@@ -58,8 +55,7 @@ let destruct =
          z |> Zipper.set_caret(Outer) |> Zipper.move(Right)
        ) /* If not on last inner position */
   | (Right, Inner(_, c_idx), (_, Some(t))) =>
-    Zipper.replace_mono(Right, Token.rm_nth(c_idx + 1, t), z)
-  /* Can't subdestruct in delimiter, so just destruct on whole delimiter */
+    Zipper.replace_mono(Right, Token.rm_nth(c_idx + 1, t), z) /* Can't subdestruct in delimiter, so just destruct on whole delimiter */
   | (Left, Inner(_), (_, None))
   | (Right, Inner(_), (_, None)) =>
     /* Note: Counterintuitve, but yes, these cases are identically handled */
@@ -80,9 +76,8 @@ let merge = ((l, r): (Token.t, Token.t), z: t): option(t) =>
   |> Zipper.set_caret(Inner(0, Token.length(l) - 1))  // note monotile assumption
   |> Zipper.delete(Left)
   |> OptUtil.and_then(Zipper.delete(Right))
-  |> Option.map(Zipper.construct_mono(Right, l ++ r));
+  |> Option.map(Zipper.construct_mono(Right, l ++ r)) /* Check if containing duo form has a mono equivalent e.g. list literals */;
 
-/* Check if containing duo form has a mono equivalent e.g. list literals */
 let parent_duomerges = (z: Zipper.t) => {
   let* parent = Relatives.parent(z.relatives);
   let* lbl = Piece.label(parent);
@@ -104,8 +99,7 @@ let go = (d: Direction.t, z: t): option(t) => {
     z
     |> Zipper.delete_parent
     |> Zipper.set_caret(Inner(0, 0))
-    |> Zipper.construct(~caret=Right, ~backpack=Left, lbl)
-    /* Below regrouting important for parens/ap positioning */
+    |> Zipper.construct(~caret=Right, ~backpack=Left, lbl) /* Below regrouting important for parens/ap positioning */
     |> Zipper.regrout(Right)
     |> Option.some
   | (_, Outer, (Some(l), Some(r))) when Molds.allow_merge(l, r) =>

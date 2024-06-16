@@ -1,7 +1,6 @@
 open Util.OptUtil.Syntax;
-open Suggestion;
+open Suggestion /* Suggest the token at the top of the backpack, if we can put it down */;
 
-/* Suggest the token at the top of the backpack, if we can put it down */
 let suggest_backpack = (z: Zipper.t): list(Suggestion.t) => {
   /* Note: Sort check unnecessary here as wouldn't be able to put down */
   switch (z.backpack) {
@@ -30,11 +29,10 @@ let suggest = (ci: Info.t, z: Zipper.t): list(Suggestion.t) => {
     @ AssistantCtx.suggest_lookahead_variable(ci)
     |> List.sort(Suggestion.compare)
   )
-  @ (AssistantForms.suggest_operator(ci) |> List.sort(Suggestion.compare));
+  @ (AssistantForms.suggest_operator(ci) |> List.sort(Suggestion.compare)) /* If there is a monotile to the left of the caret, return it. We
+                                                                     * currently only make suggestions in such situations */;
 };
 
-/* If there is a monotile to the left of the caret, return it. We
- * currently only make suggestions in such situations */
 let token_to_left = (z: Zipper.t): option(string) =>
   switch (
     z.caret,
@@ -44,19 +42,17 @@ let token_to_left = (z: Zipper.t): option(string) =>
   | (Outer, [Tile({label: [tok_to_left], _}), ..._], _) =>
     Some(tok_to_left)
   | _ => None
-  };
-
-/* The selection buffer used by TyDi is currently unstructured; it simply
+  } /* The selection buffer used by TyDi is currently unstructured; it simply
  * holds an unparsed string, which is parsed via the same mechanism as
- * Paste only when a suggestion is accepted. */
+ * Paste only when a suggestion is accepted. */;
+
 let mk_unparsed_buffer =
     (~sort: Sort.t, sibs: Siblings.t, t: Token.t): Segment.t => {
   let mold = Siblings.mold_fitting_between(sort, Precedence.max, sibs);
   [Tile({id: Id.mk(), label: [t], shards: [0], children: [], mold})];
-};
+} /* If 'current' is a proper prefix of 'candidate', return the
+ * suffix such that current ++ suffix == candidate */;
 
-/* If 'current' is a proper prefix of 'candidate', return the
- * suffix such that current ++ suffix == candidate */
 let suffix_of = (candidate: Token.t, current: Token.t): option(Token.t) => {
   let candidate_suffix =
     String.sub(
@@ -65,9 +61,8 @@ let suffix_of = (candidate: Token.t, current: Token.t): option(Token.t) => {
       String.length(candidate) - String.length(current),
     );
   candidate_suffix == "" ? None : Some(candidate_suffix);
-};
+} /* PERF: This is quite expensive */;
 
-/* PERF: This is quite expensive */
 let z_to_ci = (~settings: CoreSettings.t, ~ctx: Ctx.t, z: Zipper.t) => {
   let map =
     z
@@ -76,17 +71,15 @@ let z_to_ci = (~settings: CoreSettings.t, ~ctx: Ctx.t, z: Zipper.t) => {
     |> Interface.Statics.mk_map_ctx(settings, ctx);
   let* index = Indicated.index(z);
   Id.Map.find_opt(index, map);
-};
+} /* Returns the text content of the suggestion buffer */;
 
-/* Returns the text content of the suggestion buffer */
 let get_buffer = (z: Zipper.t): option(Token.t) =>
   switch (z.selection.mode, z.selection.content) {
   | (Buffer(Unparsed), [Tile({label: [completion], _})]) =>
     Some(completion)
   | _ => None
-  };
+  } /* Populates the suggestion buffer with a type-directed suggestion */;
 
-/* Populates the suggestion buffer with a type-directed suggestion */
 let set_buffer = (~settings, ~ctx: Ctx.t, z: Zipper.t): option(Zipper.t) => {
   let* tok_to_left = token_to_left(z);
   let* ci = z_to_ci(~settings, ~ctx, z);

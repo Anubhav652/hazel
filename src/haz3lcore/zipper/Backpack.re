@@ -215,11 +215,10 @@ let shard_info = (bp: t) => {
   bp |> List.iter(sel => add_sel(sel, info));
   Order.tran_close(info.order);
   info;
-};
-
-/* PERF: This becomes very costly when there are a lot of things
+} /* PERF: This becomes very costly when there are a lot of things
    in the backpack; e.g. if you open 23 parens, it's almost 100%
-   of the keystoke cost, for a 55x total slowdown  */
+   of the keystoke cost, for a 55x total slowdown  */;
+
 let shard_info = Core.Memo.general(~cache_size_bound=1000, shard_info);
 
 let push = sel => Selection.is_empty(sel) ? Fun.id : List.cons(sel);

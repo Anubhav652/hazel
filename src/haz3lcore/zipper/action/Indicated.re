@@ -11,44 +11,31 @@ let piece' =
     : option((Piece.t, Direction.t, relation)) => {
   let sibs =
     trim_secondary
-      ? sibs_with_sel(z) |> Siblings.trim_secondary : sibs_with_sel(z);
-  /* Returns the piece currently indicated (if any) and which side of
-     that piece the caret is on. We favor indicating the piece to the
-     (R)ight, but may end up indicating the (P)arent or the (L)eft.
-     We don't indicate secondary tiles. This function ignores whether
-     or not there is a selection so this can be used to get the caret
-     direction, but the caller shouldn't indicate if there's a selection */
+      ? sibs_with_sel(z) |> Siblings.trim_secondary
+      : sibs_with_sel(z) /* Returns the piece currently indicated (if any) and which side of   that piece the caret is on. We favor indicating the piece to the   (R)ight, but may end up indicating the (P)arent or the (L)eft.   We don't indicate secondary tiles. This function ignores whether   or not there is a selection so this can be used to get the caret   direction, but the caller shouldn't indicate if there's a selection */;
+
   switch (Siblings.neighbors(sibs), parent(z)) {
   /* Non-empty selection => no indication */
   //| _ when z.selection.content != [] => None
+
   /* Empty syntax => no indication */
-  | ((None, None), None) => None
-  /* L not secondary, R is secondary => indicate L */
+  | ((None, None), None) => None /* L not secondary, R is secondary => indicate L */
   | ((Some(l), Some(r)), _) when !ign(l) && ign(r) =>
-    Some((l, Left, Sibling))
-  /* L and R are secondarys => no indication */
+    Some((l, Left, Sibling)) /* L and R are secondarys => no indication */
   | ((Some(l), Some(r)), _) when ign(l) && ign(r) =>
-    no_ws ? None : Some((l, Left, Sibling))
-  /* At right end of syntax and L is secondary => no indication */
+    no_ws ? None : Some((l, Left, Sibling)) /* At right end of syntax and L is secondary => no indication */
   | ((Some(l), None), None) when ign(l) =>
-    no_ws ? None : Some((l, Left, Sibling))
-  /* At left end of syntax and R is secondary => no indication */
+    no_ws ? None : Some((l, Left, Sibling)) /* At left end of syntax and R is secondary => no indication */
   | ((None, Some(r)), None) when ign(r) =>
-    no_ws ? None : Some((r, Right, Sibling))
-  /* No L and R is a secondary and there is a P => indicate P */
+    no_ws ? None : Some((r, Right, Sibling)) /* No L and R is a secondary and there is a P => indicate P */
   | ((None, Some(r)), Some(parent)) when ign(r) =>
-    Some((parent, Left, Parent))
-  /* L is not secondary and caret is outer => indicate L */
+    Some((parent, Left, Parent)) /* L is not secondary and caret is outer => indicate L */
   | ((Some(l), _), _) when !ign(l) && z.caret == Outer =>
-    Some((l, Left, Sibling))
-  /* No L, some P, and caret is outer => indicate R */
+    Some((l, Left, Sibling)) /* No L, some P, and caret is outer => indicate R */
   | ((None, _), Some(parent)) when z.caret == Outer =>
-    Some((parent, Left, Parent))
-  /* R is not secondary, either no L or L is secondary or caret is inner => indicate R */
-  | ((_, Some(r)), _) => Some((r, Right, Sibling))
-  /* No R and there is a P => indicate P */
-  | ((_, None), Some(parent)) => Some((parent, Right, Parent))
-  /* There is an L but no R and no P => indicate L */
+    Some((parent, Left, Parent)) /* R is not secondary, either no L or L is secondary or caret is inner => indicate R */
+  | ((_, Some(r)), _) => Some((r, Right, Sibling)) /* No R and there is a P => indicate P */
+  | ((_, None), Some(parent)) => Some((parent, Right, Parent)) /* There is an L but no R and no P => indicate L */
   //TODO(andrew): Right below seems wrong but it gets fucky otherwise
   | ((Some(l), None), None) => Some((l, Right, Sibling))
   };

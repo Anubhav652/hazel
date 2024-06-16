@@ -63,8 +63,7 @@ type t =
   | SetMeta(set_meta)
   | UpdateExplainThisModel(ExplainThisUpdate.update)
   | ExportPersistentData
-  | DebugConsole(string)
-  /* editors */
+  | DebugConsole(string) /* editors */
   | ResetCurrentEditor
   | InitImportAll([@opaque] Js_of_ocaml.Js.t(Js_of_ocaml.File.file))
   | FinishImportAll(option(string))
@@ -73,8 +72,7 @@ type t =
   // editors: scratchmode only
   | InitImportScratchpad([@opaque] Js_of_ocaml.Js.t(Js_of_ocaml.File.file))
   | FinishImportScratchpad(option(string))
-  | SwitchScratchSlide(int)
-  /* editor */
+  | SwitchScratchSlide(int) /* editor */
   | TAB
   | Save
   | PerformAction(Action.t)

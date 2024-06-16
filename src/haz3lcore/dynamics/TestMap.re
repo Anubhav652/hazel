@@ -1,6 +1,5 @@
-open Sexplib.Std;
+open Sexplib.Std /* FIXME: Make more obvious names. */;
 
-/* FIXME: Make more obvious names. */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type instance_report = (DHExp.t, TestStatus.t);
 

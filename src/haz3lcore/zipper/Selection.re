@@ -15,9 +15,8 @@ type t = {
   focus: Direction.t,
   content: Segment.t,
   mode,
-};
+} /* NOTE: backpack no longer uses selection focus */;
 
-/* NOTE: backpack no longer uses selection focus */
 let mk = (~mode=Normal, ~focus=Direction.Left, content: Segment.t) => {
   focus,
   content,

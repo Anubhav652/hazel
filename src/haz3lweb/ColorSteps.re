@@ -1,11 +1,7 @@
-type colorMap = Haz3lcore.Id.Map.t(string);
+type colorMap = Haz3lcore.Id.Map.t(string) /*[@deriving sexp]*/;
 
-/*[@deriving sexp]*/
-type t = (colorMap, int);
+type t = (colorMap, int) /* TODO: Hannah - Pick 7 or so distinct colors from the different color generator thing (HSLuv)   Make sure distinguishable for color blind or greyscale   - think about related colors for related concepts*/;
 
-/* TODO: Hannah - Pick 7 or so distinct colors from the different color generator thing (HSLuv)
-   Make sure distinguishable for color blind or greyscale
-   - think about related colors for related concepts*/
 let child_colors = ["blue", "pink", "teal", "orange", "purple", "yellow"];
 
 let empty = (Haz3lcore.Id.Map.empty, 0);

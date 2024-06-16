@@ -35,9 +35,8 @@ let singleton = (ctr: Constructor.t, value: 'a): t('a) => [(ctr, value)];
 
 let compare_bindings =
     ((ctr1, _): binding('a), (ctr2, _): binding('a)): int =>
-  compare(ctr1, ctr2);
+  compare(ctr1, ctr2) /* compares ctrs only */;
 
-/* compares ctrs only */
 let equal = (val_equal: ('a, 'a) => bool, map1: t('a), map2: t('a)): bool => {
   let equal_bindings =
       (
@@ -84,9 +83,8 @@ let map = (f: 'a => 'b, m: t('a)): t('b) => {
   let (ctrs, vals) = List.split(m);
   let vals = List.map(f, vals);
   List.combine(ctrs, vals);
-};
+} /* sorts on ctrs only */;
 
-/* sorts on ctrs only */
 let sort = (map: t('a)): t('a) => {
   List.fast_sort(compare_bindings, map);
 };

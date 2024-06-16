@@ -194,10 +194,8 @@ module Make = (M: Editor.Meta.S) => {
   let to_edge: (Direction.t, t) => option(t) =
     fun
     | Left => to_start
-    | Right => to_end;
+    | Right => to_end /* Do move_action until the indicated piece is such that piece_p is true.   If no such piece is found, don't move. */;
 
-  /* Do move_action until the indicated piece is such that piece_p is true.
-     If no such piece is found, don't move. */
   let rec do_until =
           (
             ~move_first=true,
@@ -214,11 +212,10 @@ module Make = (M: Editor.Meta.S) => {
       let* z = move_first ? Some(z) : move_action(z);
       do_until(~move_first, move_action, piece_p, z);
     };
-  };
-
-  /* Do move_action until the indicated piece is such that piece_p is true,
+  } /* Do move_action until the indicated piece is such that piece_p is true,
      restarting from the beginning/end if not found in forward direction.
-     If no such piece is found, don't move. */
+     If no such piece is found, don't move. */;
+
   let do_until_wrap = (p, d, z) =>
     switch (do_until(primary(ByToken, d), p, z)) {
     | None =>

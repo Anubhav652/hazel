@@ -634,13 +634,8 @@ module F = (ExerciseEnv: ExerciseEnv) => {
   };
   let stitch_term = Core.Memo.general(stitch_term);
 
-  type stitched_statics = stitched(StaticsItem.t);
+  type stitched_statics = stitched(StaticsItem.t) /* Multiple stitchings are needed for each exercise        (see comments in the stitched type above)           Stitching is necessary to concatenate terms        from different editors, which are then typechecked. */;
 
-  /* Multiple stitchings are needed for each exercise
-     (see comments in the stitched type above)
-
-     Stitching is necessary to concatenate terms
-     from different editors, which are then typechecked. */
   let stitch_static =
       (settings: CoreSettings.t, t: stitched(TermItem.t)): stitched_statics => {
     let mk = ({term, term_ranges, _}: TermItem.t): StaticsItem.t => {
@@ -767,11 +762,10 @@ module F = (ExerciseEnv: ExerciseEnv) => {
     let statics_only = ({term, info_map, _}: StaticsItem.t): t => {
       {term, info_map, result: NoElab};
     };
-  };
-
-  /* Given the evaluation results, collects the
+  } /* Given the evaluation results, collects the
      relevant information for producing dynamic
-     feedback*/
+     feedback*/;
+
   let stitch_dynamic =
       (
         settings: CoreSettings.t,

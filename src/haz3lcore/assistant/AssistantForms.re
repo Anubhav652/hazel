@@ -1,15 +1,8 @@
 open Util;
-open OptUtil.Syntax;
+open OptUtil.Syntax /* This module generates TyDi suggestions which depend * neither on the typing context or the backpack */;
 
-/* This module generates TyDi suggestions which depend
- * neither on the typing context or the backpack */
+let leading_expander = " " ++ AssistantExpander.c /* Specifies type information for syntactic forms. Could in principle be * derived by generating segments from Forms, parsing them to terms, and * running Statics, but for now, new forms e.g. operators must be added * below manually.  */;
 
-let leading_expander = " " ++ AssistantExpander.c;
-
-/* Specifies type information for syntactic forms. Could in principle be
- * derived by generating segments from Forms, parsing them to terms, and
- * running Statics, but for now, new forms e.g. operators must be added
- * below manually.  */
 module Typ = {
   let unk: Typ.t = Unknown(Internal);
 
@@ -18,7 +11,7 @@ module Typ = {
     ("false", Bool),
     //("[]", List(unk)), / *NOTE: would need to refactor buffer for this to show up */
     //("()", Prod([])), /* NOTE: would need to refactor buffer for this to show up */
-    ("\"\"", String), /* NOTE: Irrelevent as second quote appears automatically */
+    ("\"\"", String) /* NOTE: Irrelevent as second quote appears automatically */,
     ("_", unk),
   ];
 
@@ -33,8 +26,8 @@ module Typ = {
   ];
 
   let of_infix_delim: list((Token.t, Typ.t)) = [
-    ("|>", unk), /* */
-    (",", Prod([unk, unk])), /* NOTE: Current approach doesn't work for this, but irrelevant as 1-char */
+    ("|>", unk) /* */,
+    (",", Prod([unk, unk])) /* NOTE: Current approach doesn't work for this, but irrelevant as 1-char */,
     ("::", List(unk)),
     ("@", List(unk)),
     (";", unk),
@@ -90,10 +83,9 @@ module Typ = {
       },
       delims,
     );
-};
+} /* Automatically collates most delimiters from Forms, notably all
+ * mono delimiters, all infix operators, and all leading delimiters */;
 
-/* Automatically collates most delimiters from Forms, notably all
- * mono delimiters, all infix operators, and all leading delimiters */
 module Delims = {
   let delayed_leading = (sort: Sort.t): list(Token.t) =>
     Form.delims

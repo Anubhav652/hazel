@@ -46,8 +46,7 @@ let cast = (ctx: Ctx.t, mode: Mode.t, self_ty: Typ.t, d: DHExp.t) =>
     | _ => failwith("Elaborator.wrap: SynTypFun non-forall-type")
     }
   | Ana(ana_ty) =>
-    let ana_ty = Typ.normalize(ctx, ana_ty);
-    /* Forms with special ana rules get cast from their appropriate Matched types */
+    let ana_ty = Typ.normalize(ctx, ana_ty) /* Forms with special ana rules get cast from their appropriate Matched types */;
     switch (d) {
     | ListLit(_)
     | ListConcat(_)
@@ -82,26 +81,22 @@ let cast = (ctx: Ctx.t, mode: Mode.t, self_ty: Typ.t, d: DHExp.t) =>
       | (Unknown(prov), Rec(_, Sum(_)))
       | (Unknown(prov), Sum(_)) => DHExp.cast(d, self_ty, Unknown(prov))
       | _ => d
-      }
-    /* Forms with special ana rules but no particular typing requirements */
+      } /* Forms with special ana rules but no particular typing requirements */
     | ConsistentCase(_)
     | InconsistentBranches(_)
     | IfThenElse(_)
     | Sequence(_)
     | Let(_)
-    | FixF(_) => d
-    /* Hole-like forms: Don't cast */
+    | FixF(_) => d /* Hole-like forms: Don't cast */
     | InvalidText(_)
     | FreeVar(_)
     | EmptyHole(_)
-    | NonEmptyHole(_) => d
-    /* DHExp-specific forms: Don't cast */
+    | NonEmptyHole(_) => d /* DHExp-specific forms: Don't cast */
     | Cast(_)
     | Closure(_)
     | Filter(_)
     | FailedCast(_)
-    | InvalidOperation(_) => d
-    /* Normal cases: wrap */
+    | InvalidOperation(_) => d /* Normal cases: wrap */
     | BoundVar(_)
     | Ap(_)
     | ApBuiltin(_)
@@ -120,10 +115,9 @@ let cast = (ctx: Ctx.t, mode: Mode.t, self_ty: Typ.t, d: DHExp.t) =>
       // TODO: check with andrew
       DHExp.cast(d, self_ty, ana_ty)
     };
-  };
+  } /* Handles cast insertion and non-empty-hole wrapping
+   for elaborated expressions */;
 
-/* Handles cast insertion and non-empty-hole wrapping
-   for elaborated expressions */
 let wrap = (ctx: Ctx.t, u: Id.t, mode: Mode.t, self, d: DHExp.t): DHExp.t =>
   switch (Info.status_exp(ctx, mode, self)) {
   | NotInHole(_) =>
@@ -145,7 +139,7 @@ let rec dhexp_of_uexp =
   switch (Id.Map.find_opt(Term.UExp.rep_id(uexp), m)) {
   | Some(InfoExp({mode, self, ctx, ancestors, co_ctx, _})) =>
     let err_status = Info.status_exp(ctx, mode, self);
-    let id = Term.UExp.rep_id(uexp); /* NOTE: using term uids for hole ids */
+    let id = Term.UExp.rep_id(uexp) /* NOTE: using term uids for hole ids */;
     let+ d: DHExp.t =
       switch (uexp.term) {
       | Invalid(t) => Some(DHExp.InvalidText(id, 0, t))
@@ -201,8 +195,7 @@ let rec dhexp_of_uexp =
             Rule(BoolLit(true), BoolLit(false)),
             Rule(BoolLit(false), BoolLit(true)),
           ];
-        let d = DHExp.ConsistentCase(DHExp.Case(d_scrut, d_rules, 0));
-        /* Manually construct cast (case is not otherwise cast) */
+        let d = DHExp.ConsistentCase(DHExp.Case(d_scrut, d_rules, 0)) /* Manually construct cast (case is not otherwise cast) */;
         switch (mode) {
         | Ana(ana_ty) => DHExp.cast(d, Bool, ana_ty)
         | _ => d
@@ -312,8 +305,7 @@ let rec dhexp_of_uexp =
             List.length(xs) == 1 ? List.hd(xs) : ctor(xs);
           let* ty_fn = fixed_exp_typ(m, fn);
           let (ty_arg, ty_ret) = Typ.matched_arrow(ctx, ty_fn);
-          let ty_ins = Typ.matched_args(ctx, List.length(args), ty_arg);
-          /* Substitute all deferrals for new variables */
+          let ty_ins = Typ.matched_args(ctx, List.length(args), ty_arg) /* Substitute all deferrals for new variables */;
           let (pats, ty_args, ap_args, ap_ctx) =
             List.combine(args, ty_ins)
             |> List.fold_left(
@@ -412,7 +404,7 @@ and dhpat_of_upat = (m: Statics.Map.t, upat: Term.UPat.t): option(DHPat.t) => {
       | NotInHole(_) => None
       | InHole(_) => Some(TypeInconsistent)
       };
-    let u = Term.UPat.rep_id(upat); /* NOTE: using term uids for hole ids */
+    let u = Term.UPat.rep_id(upat) /* NOTE: using term uids for hole ids */;
     let wrap = (d: DHPat.t): option(DHPat.t) =>
       switch (maybe_reason) {
       | None => Some(d)

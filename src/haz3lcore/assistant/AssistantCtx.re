@@ -1,9 +1,7 @@
 open Suggestion;
 
-let expander = AssistantExpander.c;
+let expander = AssistantExpander.c /* For suggestions in patterns, suggest variables which * occur free in that pattern's scope. */;
 
-/* For suggestions in patterns, suggest variables which
- * occur free in that pattern's scope. */
 let free_variables =
     (expected_ty: Typ.t, ctx: Ctx.t, co_ctx: CoCtx.t): list(Suggestion.t) => {
   List.filter_map(
@@ -18,11 +16,10 @@ let free_variables =
         };
       | Some(_) => None
       },
-    co_ctx,
+    co_ctx /* For suggestsions in expressions, suggest variables from the ctx */,
   );
 };
 
-/* For suggestsions in expressions, suggest variables from the ctx */
 let bound_variables = (ty_expect: Typ.t, ctx: Ctx.t): list(Suggestion.t) =>
   List.filter_map(
     fun
@@ -44,9 +41,8 @@ let bound_constructors =
       Some({content: name, strategy: wrap(FromCtx(typ))})
     | _ => None,
     ctx,
-  );
+  ) /* Suggest applying a function from the ctx which returns an appropriate type */;
 
-/* Suggest applying a function from the ctx which returns an appropriate type */
 let bound_aps = (ty_expect: Typ.t, ctx: Ctx.t): list(Suggestion.t) =>
   List.filter_map(
     fun
@@ -76,9 +72,8 @@ let bound_constructor_aps = (wrap, ty: Typ.t, ctx: Ctx.t): list(Suggestion.t) =>
       })
     | _ => None,
     ctx,
-  );
+  ) /* Suggest bound type aliases in type annotations or definitions */;
 
-/* Suggest bound type aliases in type annotations or definitions */
 let typ_context_entries = (ctx: Ctx.t): list(Suggestion.t) =>
   List.filter_map(
     fun
@@ -103,9 +98,7 @@ let suggest_variable = (ci: Info.t): list(Suggestion.t) => {
   | InfoTyp(_) => typ_context_entries(ctx)
   | _ => []
   };
-};
-
-/* Suggest lookahead tokens:
+} /* Suggest lookahead tokens:
  *
  * Sometimes the expected type is Ty, but we want to enter something of Ty'
  * because we're going to follow it up with an infix op of type (Ty', _) -> Ty.
@@ -125,7 +118,7 @@ let suggest_variable = (ci: Info.t): list(Suggestion.t) => {
  * if they meant another, so we'd need to implement staged completion.
  * For now we just don't show a second token, which can be slightly confusing.
  *
- */
+ */;
 
 let suggest_lookahead_variable = (ci: Info.t): list(Suggestion.t) => {
   let restrategize = (suffix, {content, strategy}) => {

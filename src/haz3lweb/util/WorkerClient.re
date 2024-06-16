@@ -30,13 +30,12 @@ let request =
         | Some(id) => Dom_html.window##clearTimeout(id)
         | None => ()
         };
-        timeoutId.contents = None; /* Clear timeout after response */
+        timeoutId.contents = None /* Clear timeout after response */;
         evt##.data |> Response.deserialize |> handler;
         Js._true;
-      });
+      }) /* If there's an ongoing request, terminate the worker and reinitialize */;
   };
 
-  /* If there's an ongoing request, terminate the worker and reinitialize */
   switch (timeoutId.contents) {
   | Some(id) =>
     Dom_html.window##clearTimeout(id);

@@ -309,12 +309,10 @@ let mk =
         } else {
           switch (flt) {
           | Residue(_) => go'(d', Filter)
-          | Filter(_) => go'(d', Filter)
+          | Filter(_) => go'(d', Filter) /* Hole expressions must appear within a closure in   the postprocessed result */
           };
         }
 
-      /* Hole expressions must appear within a closure in
-         the postprocessed result */
       | EmptyHole(u, i) =>
         let selected =
           switch (selected_hole_instance) {

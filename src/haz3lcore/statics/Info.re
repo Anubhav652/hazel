@@ -1,9 +1,7 @@
 open Sexplib.Std;
 open Util;
 open OptUtil.Syntax;
-open Term;
-
-/* INFO.re
+open Term /* The ids of a term's ancestors in the AST */ /* INFO.re
 
    This module defines the cursor INFO data structure, which is used
    to represent the static information associated with a term in the
@@ -28,9 +26,8 @@ open Term;
    status; otherwise, an ERROR status, but in both cases, a fixed type
    is determined.
 
-   */
+   */;
 
-/* The ids of a term's ancestors in the AST */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type ancestors = list(Id.t);
 
@@ -40,27 +37,21 @@ type error_inconsistent =
   | Expectation({
       ana: Typ.t,
       syn: Typ.t,
-    })
-  /* Inconsistent match or listlit */
-  | Internal(list(Typ.t))
-  /* Bad function position */
+    }) /* Inconsistent match or listlit */
+  | Internal(list(Typ.t)) /* Bad function position */
   | WithArrow(Typ.t);
 
 [@deriving (show({with_path: false}), sexp, yojson)]
 type error_no_type =
   /* Invalid expression token, treated as hole */
-  | BadToken(Token.t)
-  /* Empty application of function with inconsistent type */
-  | BadTrivAp(Typ.t)
-  /* Sum constructor neiter bound nor in ana type */
-  | FreeConstructor(Constructor.t);
+  | BadToken(Token.t) /* Empty application of function with inconsistent type */
+  | BadTrivAp(Typ.t) /* Sum constructor neiter bound nor in ana type */
+  | FreeConstructor(Constructor.t) /* Errors which can apply to either expression or patterns */;
 
-/* Errors which can apply to either expression or patterns */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type error_common =
   /* Underdetermined: No type can be assigned */
-  | NoType(error_no_type)
-  /* Overdetermined: Conflicting type expectations */
+  | NoType(error_no_type) /* Overdetermined: Conflicting type expectations */
   | Inconsistent(error_inconsistent);
 
 [@deriving (show({with_path: false}), sexp, yojson)]
@@ -85,11 +76,10 @@ type ok_ana =
       ana: Typ.t,
       syn: Typ.t,
       join: Typ.t,
-    })
-  /* A match expression or list literal which, in synthetic position,
-     would be marked as internally inconsistent, but is considered
-     fine as the expected type provides a consistent lower bound
-     (often Unknown) for the types of the branches/elements */
+    }) /* A match expression or list literal which, in synthetic position,
+          would be marked as internally inconsistent, but is considered
+          fine as the expected type provides a consistent lower bound
+          (often Unknown) for the types of the branches/elements */
   | InternallyInconsistent({
       ana: Typ.t,
       nojoin: list(Typ.t),
@@ -126,21 +116,14 @@ type status_pat =
 [@deriving (show({with_path: false}), sexp, yojson)]
 type status_variant =
   | Unique
-  | Duplicate;
+  | Duplicate /* Expectation imposed on a type by the parent form.   TODO: This is fundamentally syntactic and should   eventually be reimplemeted via a seperate sort */;
 
-/* Expectation imposed on a type by the parent form.
-   TODO: This is fundamentally syntactic and should
-   eventually be reimplemeted via a seperate sort */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type typ_expects =
   | TypeExpected
   | ConstructorExpected(status_variant, Typ.t)
-  | VariantExpected(status_variant, Typ.t);
+  | VariantExpected(status_variant, Typ.t) /* Type term errors   TODO: The three additional errors statuses   are fundamentally syntactic and should when   possible be reimplemeted via a seperate sort */;
 
-/* Type term errors
-   TODO: The three additional errors statuses
-   are fundamentally syntactic and should when
-   possible be reimplemeted via a seperate sort */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type error_typ =
   | BadToken(Token.t) /* Invalid token, treated as type hole */
@@ -148,9 +131,8 @@ type error_typ =
   | DuplicateConstructor(Constructor.t) /* Duplicate ctr in same sum */
   | WantTypeFoundAp
   | WantConstructorFoundType(Typ.t)
-  | WantConstructorFoundAp;
+  | WantConstructorFoundAp /* Type ok statuses for cursor inspector */;
 
-/* Type ok statuses for cursor inspector */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type ok_typ =
   | Variant(Constructor.t, Typ.t)
@@ -166,22 +148,19 @@ type status_typ =
 [@deriving (show({with_path: false}), sexp, yojson)]
 type type_var_err =
   | Other
-  | NotCapitalized;
+  | NotCapitalized /* What are we shadowing? */;
 
-/* What are we shadowing? */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type shadow_src =
   | BaseTyp
   | TyAlias
-  | TyVar;
+  | TyVar /* Type pattern term errors */;
 
-/* Type pattern term errors */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type error_tpat =
   | ShadowsType(TypVar.t, shadow_src)
-  | NotAVar(type_var_err);
+  | NotAVar(type_var_err) /* Type pattern ok statuses for cursor inspector */;
 
-/* Type pattern ok statuses for cursor inspector */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type ok_tpat =
   | Empty
@@ -194,15 +173,15 @@ type status_tpat =
 
 [@deriving (show({with_path: false}), sexp, yojson)]
 type exp = {
-  term: UExp.t, /* The term under consideration */
-  ancestors, /* Ascending list of containing term ids */
-  ctx: Ctx.t, /* Typing context for the term */
-  mode: Mode.t, /* Parental type expectations  */
-  self: Self.exp, /* Expectation-independent type info */
-  co_ctx: CoCtx.t, /* Locally free variables */
-  cls: Term.Cls.t, /* DERIVED: Syntax class (i.e. form name) */
-  status: status_exp, /* DERIVED: Ok/Error statuses for display */
-  ty: Typ.t /* DERIVED: Type after nonempty hole fixing */
+  term: UExp.t /* The term under consideration */,
+  ancestors /* Ascending list of containing term ids */,
+  ctx: Ctx.t /* Typing context for the term */,
+  mode: Mode.t /* Parental type expectations  */,
+  self: Self.exp /* Expectation-independent type info */,
+  co_ctx: CoCtx.t /* Locally free variables */,
+  cls: Term.Cls.t /* DERIVED: Syntax class (i.e. form name) */,
+  status: status_exp /* DERIVED: Ok/Error statuses for display */,
+  ty: Typ.t /* DERIVED: Type after nonempty hole fixing */,
 };
 
 [@deriving (show({with_path: false}), sexp, yojson)]
@@ -245,9 +224,8 @@ type secondary = {
   cls: Term.Cls.t, // Cls of secondary, not source term
   sort: Sort.t, // from source term
   ctx: Ctx.t // from source term
-};
+} /* The static information collated for each term */;
 
-/* The static information collated for each term */
 [@deriving (show({with_path: false}), sexp, yojson)]
 type t =
   | InfoExp(exp)
@@ -339,11 +317,7 @@ let rec status_common =
     }
   | (Just(syn), Ana(ana)) =>
     switch (
-      Typ.join_fix(
-        ctx,
-        ana,
-        syn /* Note: the ordering of ana, syn matters */
-      )
+      Typ.join_fix(ctx, ana, syn /* Note: the ordering of ana, syn matters */)
     ) {
     | None => InHole(Inconsistent(Expectation({syn, ana})))
     | Some(join) => NotInHole(Ana(Consistent({ana, syn, join})))
@@ -401,12 +375,11 @@ let rec status_pat = (ctx: Ctx.t, mode: Mode.t, self: Self.pat): status_pat =>
     | InHole(err_pat) => InHole(Common(err_pat))
     }
   | (SynFun, _) => InHole(ExpectedConstructor)
-  };
-
-/* Determines whether an expression or pattern is in an error hole,
+  } /* Determines whether an expression or pattern is in an error hole,
    depending on the mode, which represents the expectations of the
    surrounding syntactic context, and the self which represents the
-   makeup of the expression / pattern itself. */
+   makeup of the expression / pattern itself. */;
+
 let rec status_exp = (ctx: Ctx.t, mode: Mode.t, self: Self.exp): status_exp =>
   switch (self, mode) {
   | (Free(name), _) => InHole(FreeVariable(name))
@@ -416,7 +389,8 @@ let rec status_exp = (ctx: Ctx.t, mode: Mode.t, self: Self.exp): status_exp =>
       | InHole(Common(Inconsistent(Internal(_)) as inconsistent_err)) =>
         Some(inconsistent_err)
       | NotInHole(_)
-      | InHole(Common(Inconsistent(Expectation(_) | WithArrow(_)))) => None /* Type checking should fail and these errors would be nullified */
+      | InHole(Common(Inconsistent(Expectation(_) | WithArrow(_)))) =>
+        None /* Type checking should fail and these errors would be nullified */
       | InHole(Common(NoType(_)))
       | InHole(
           FreeVariable(_) | InexhaustiveMatch(_) | UnusedDeferral |
@@ -433,15 +407,14 @@ let rec status_exp = (ctx: Ctx.t, mode: Mode.t, self: Self.exp): status_exp =>
     | NotInHole(ok_exp) => NotInHole(Common(ok_exp))
     | InHole(err_pat) => InHole(Common(err_pat))
     }
-  };
-
-/* This logic determines whether a type should be put
+  } /* This logic determines whether a type should be put
    in a hole or not. It's mostly syntactic, determining
    the proper placement of sum type variants and ctrs;
    this should be reimplemented in the future as a
    separate sort. It also determines semantic properties
    such as whether or not a type variable reference is
-   free, and whether a ctr name is a dupe. */
+   free, and whether a ctr name is a dupe. */;
+
 let status_typ =
     (ctx: Ctx.t, expects: typ_expects, term: TermBase.UTyp.t, ty: Typ.t)
     : status_typ =>
@@ -502,9 +475,8 @@ let status_tpat = (ctx: Ctx.t, utpat: UTPat.t): status_tpat =>
   | Var(name) => NotInHole(Var(name))
   | Invalid(_) => InHole(NotAVar(NotCapitalized))
   | MultiHole(_) => InHole(NotAVar(Other))
-  };
+  } /* Determines whether any term is in an error hole. */;
 
-/* Determines whether any term is in an error hole. */
 let is_error = (ci: t): bool => {
   switch (ci) {
   | InfoExp({mode, self, ctx, _}) =>
@@ -527,13 +499,10 @@ let is_error = (ci: t): bool => {
     | InHole(_) => true
     | NotInHole(_) => false
     }
-  | Secondary(_) => false
+  | Secondary(_) => false /* Determined the type of an expression or pattern 'after hole fixing';   that is, all ill-typed terms are considered to be 'wrapped in   non-empty holes', i.e. assigned Unknown type. */
   };
 };
 
-/* Determined the type of an expression or pattern 'after hole fixing';
-   that is, all ill-typed terms are considered to be 'wrapped in
-   non-empty holes', i.e. assigned Unknown type. */
 let fixed_typ_ok: ok_pat => Typ.t =
   fun
   | Syn(syn) => syn
@@ -576,18 +545,16 @@ let fixed_typ_exp = (ctx, mode: Mode.t, self: Self.exp): Typ.t =>
   | InHole(_) => Unknown(Internal)
   | NotInHole(AnaDeferralConsistent(ana)) => ana
   | NotInHole(Common(ok)) => fixed_typ_ok(ok)
-  };
+  } /* Add derivable attributes for expression terms */;
 
-/* Add derivable attributes for expression terms */
 let derived_exp =
     (~uexp: UExp.t, ~ctx, ~mode, ~ancestors, ~self, ~co_ctx): exp => {
   let cls = Cls.Exp(UExp.cls_of_term(uexp.term));
   let status = status_exp(ctx, mode, self);
   let ty = fixed_typ_exp(ctx, mode, self);
   {cls, self, ty, mode, status, ctx, co_ctx, ancestors, term: uexp};
-};
+} /* Add derivable attributes for pattern terms */;
 
-/* Add derivable attributes for pattern terms */
 let derived_pat =
     (~upat: UPat.t, ~ctx, ~co_ctx, ~mode, ~ancestors, ~self, ~constraint_)
     : pat => {
@@ -607,9 +574,8 @@ let derived_pat =
     term: upat,
     constraint_,
   };
-};
+} /* Add derivable attributes for types */;
 
-/* Add derivable attributes for types */
 let derived_typ = (~utyp: UTyp.t, ~ctx, ~ancestors, ~expects): typ => {
   let cls: Cls.t =
     /* Hack to improve CI display */
@@ -620,17 +586,15 @@ let derived_typ = (~utyp: UTyp.t, ~ctx, ~ancestors, ~expects): typ => {
   let ty = UTyp.to_typ(ctx, utyp);
   let status = status_typ(ctx, expects, utyp, ty);
   {cls, ctx, ancestors, status, expects, ty, term: utyp};
-};
+} /* Add derivable attributes for type patterns */;
 
-/* Add derivable attributes for type patterns */
 let derived_tpat = (~utpat: UTPat.t, ~ctx, ~ancestors): tpat => {
   let cls = Cls.TPat(UTPat.cls_of_term(utpat.term));
   let status = status_tpat(ctx, utpat);
   {cls, ancestors, status, ctx, term: utpat};
-};
+} /* If the info represents some kind of name binding which
+   exists in the context, return the id where the binding occurs */;
 
-/* If the info represents some kind of name binding which
-   exists in the context, return the id where the binding occurs */
 let get_binding_site = (info: t): option(Id.t) => {
   switch (info) {
   | InfoExp({term: {term: Var(name), _}, ctx, _}) =>

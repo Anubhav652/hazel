@@ -82,12 +82,10 @@ module App = {
         schedule_action(Haz3lweb.Update.SetMeta(FontMetrics(fm)))
       );
 
-    JsUtil.focus_clipboard_shim();
+    JsUtil.focus_clipboard_shim() /* initialize state. */;
 
-    /* initialize state. */
-    let state = State.init();
+    let state = State.init() /* Initial evaluation on a worker */;
 
-    /* Initial evaluation on a worker */
     Update.schedule_evaluation(~schedule_action, m);
 
     Os.is_mac :=
@@ -105,9 +103,8 @@ module App = {
         ~inject,
       ) => {
     open Incr.Let_syntax;
-    let%map model = model;
-    /* Note: mapping over the old_model here may
-       trigger an additional redraw */
+    let%map model = model /* Note: mapping over the old_model here may   trigger an additional redraw */;
+
     Component.create(
       ~apply_action=apply(model),
       model,

@@ -4,13 +4,8 @@ include Id.Map;
 type range = (Piece.t, Piece.t);
 type nonrec t = t(range);
 
-let union = union((_, range, _) => Some(range));
+let union = union((_, range, _) => Some(range)) /* PERF: Up to 50% reduction in some cases by memoizing  * this function. Might be better though to just do an  * unmemoized traversal building a hashtbl avoiding unioning.     TODO(andrew): Consider setting a limit for the hashtbl size */;
 
-/* PERF: Up to 50% reduction in some cases by memoizing
- * this function. Might be better though to just do an
- * unmemoized traversal building a hashtbl avoiding unioning.
-
-   TODO(andrew): Consider setting a limit for the hashtbl size */
 let range_hash: Hashtbl.t(Tile.segment, Id.Map.t(range)) =
   Hashtbl.create(1000);
 

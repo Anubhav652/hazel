@@ -1,8 +1,7 @@
 /**
   Auxiliary data structure for constructing a {!type:HoleInstanceInfo.t}.
- */
+ */ /* FIXME: Make this abstract. */
 
-/* FIXME: Make this abstract. */
 [@deriving sexp]
 type t;
 

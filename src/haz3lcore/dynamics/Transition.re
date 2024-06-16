@@ -1,48 +1,7 @@
 open Sexplib.Std;
 open Util;
 open PatternMatch;
-open DH;
-
-/* Transition.re
-
-   This module defines the evaluation semantics of Hazel in terms of small step
-   evaluation. These small steps are wrapped up into a big step in Evaluator.re.
-
-   I'll use the Sequence case as an example:
-
-    | Sequence(d1, d2) =>
-        let. _ = otherwise(d1 => Sequence(d1, d2))
-        and. _ = req_final(req(state, env), 0, d1);
-        Step({apply: () => d2, kind: Sequence, final: false});
-
-
-    Each step semantics starts with a `let. () = otherwise(...)` that defines how
-    to wrap the expression back up if the step couldn't be evaluated.
-
-    This is followed by a series of `and. d1' = req_final(req(state, env), <i>, <d1>)`
-    which indicate that in order to evaluate the step, <d1> must be final. (req_value
-    is also available if it needs to be a value). Note that if successful, d1' will
-    be the fully-evaluated version of d1. The sub-expressions are all enumerated by
-    the <i> field, so i=0 indicates that it is the first sub-expression, i=1 the
-    second etc.
-
-    Finally, we have the Step construct that defines the actual step. Note "Step"s
-    should be used if and only if they change the expression. If they do not change
-    the expression, use `Constructor` or `Indet`.
-
-    The step defines firstly, a `() => ...` function giving the result of the step,
-    secondly a `kind`, that describes the step (which will be used in the stepper)
-
-    Lastly, the `value` field allows for some speeding up of the evaluator. If you
-    are unsure, it is always safe to put `value: false`.
-
-    `value: true` guarantees:
-      - if all requirements are values, then the output will be a value
-      - if some requirements are indet, then the output will be indet
-
-    A value is either a literal, or a function with a closure, or a type function.
-    (functions without closures immediately inside them do not count as values).
-   */
+open DH /* Transition.re         This module defines the evaluation semantics of Hazel in terms of small step      evaluation. These small steps are wrapped up into a big step in Evaluator.re.         I'll use the Sequence case as an example:          | Sequence(d1, d2) =>           let. _ = otherwise(d1 => Sequence(d1, d2))           and. _ = req_final(req(state, env), 0, d1);           Step({apply: () => d2, kind: Sequence, final: false});             Each step semantics starts with a `let. () = otherwise(...)` that defines how       to wrap the expression back up if the step couldn't be evaluated.          This is followed by a series of `and. d1' = req_final(req(state, env), <i>, <d1>)`       which indicate that in order to evaluate the step, <d1> must be final. (req_value       is also available if it needs to be a value). Note that if successful, d1' will       be the fully-evaluated version of d1. The sub-expressions are all enumerated by       the <i> field, so i=0 indicates that it is the first sub-expression, i=1 the       second etc.          Finally, we have the Step construct that defines the actual step. Note "Step"s       should be used if and only if they change the expression. If they do not change       the expression, use `Constructor` or `Indet`.          The step defines firstly, a `() => ...` function giving the result of the step,       secondly a `kind`, that describes the step (which will be used in the stepper)          Lastly, the `value` field allows for some speeding up of the evaluator. If you       are unsure, it is always safe to put `value: false`.          `value: true` guarantees:         - if all requirements are values, then the output will be a value         - if some requirements are indet, then the output will be indet          A value is either a literal, or a function with a closure, or a type function.       (functions without closures immediately inside them do not count as values).      */;
 
 [@deriving (show({with_path: false}), sexp, yojson)]
 type step_kind =
@@ -264,8 +223,8 @@ module Transition = (EV: EV_MODE) => {
             Tuple([]);
           | BoolLit(false) =>
             update_test(state, id, (d', Fail));
-            Tuple([]);
-          /* Hack: assume if final and not Bool, then Indet; this won't catch errors in statics */
+            Tuple
+              ([]) /* Hack: assume if final and not Bool, then Indet; this won't catch errors in statics */;
           | _ =>
             update_test(state, id, (d', Indet));
             Tuple([]);
@@ -649,7 +608,7 @@ module Transition = (EV: EV_MODE) => {
       let. _ = otherwise(env, d);
       Indet;
     | Cast(d, t1, t2) =>
-      open CastHelpers; /* Cast calculus */
+      open CastHelpers /* Cast calculus */;
 
       let. _ = otherwise(env, d => Cast(d, t1, t2))
       and. d' = req_final(req(state, env), d => Cast(d, t1, t2), d);

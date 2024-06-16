@@ -145,12 +145,7 @@ module MutationTestingReport = {
         ]),
       [
         div(
-          ~attr=
-            Attr.classes([
-              "test-id",
-              "Test" ++ TestStatus.to_string(status),
-            ]),
-          /* NOTE: prints lexical index, not unique id */
+          ~attr=Attr.classes(["test-id", "Test" ++ TestStatus.to_string(status)]) /* NOTE: prints lexical index, not unique id */,
           [text(string_of_int(id + 1))],
         ),
         // TestView.test_instance_view(~font_metrics, instance),
@@ -364,12 +359,7 @@ module ImplGradingReport = {
         ]),
       [
         div(
-          ~attr=
-            Attr.classes([
-              "test-id",
-              "Test" ++ TestStatus.to_string(status),
-            ]),
-          /* NOTE: prints lexical index, not unique id */
+          ~attr=Attr.classes(["test-id", "Test" ++ TestStatus.to_string(status)]) /* NOTE: prints lexical index, not unique id */,
           [text(string_of_int(i + 1))],
         ),
         // TestView.test_instance_view(~font_metrics, instance),

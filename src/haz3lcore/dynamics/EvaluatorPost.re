@@ -148,9 +148,9 @@ let rec pp_eval = (d: DHExp.t): m(DHExp.t) =>
     let* c' = pp_eval(c);
     let* d1' = pp_eval(d1);
     let* d2' = pp_eval(d2);
-    IfThenElse(consistent, c', d1', d2') |> return;
+    IfThenElse(consistent, c', d1', d2')
+    |> return /* These expression forms should not exist outside closure in evaluated result */;
 
-  /* These expression forms should not exist outside closure in evaluated result */
   | BoundVar(_)
   | Let(_)
   | ConsistentCase(_)
@@ -162,13 +162,8 @@ let rec pp_eval = (d: DHExp.t): m(DHExp.t) =>
   | InvalidText(_)
   | InconsistentBranches(_) => raise(Exception(UnevalOutsideClosure))
 
-  | FixF(_) => raise(Exception(FixFOutsideClosureEnv))
+  | FixF(_) => raise(Exception(FixFOutsideClosureEnv)) /* Closure: postprocess environment, then postprocess `d'`.           Some parts of `d'` may lie inside and outside the evaluation boundary,        use `pp_eval` and `pp_uneval` as necessary.        */
 
-  /* Closure: postprocess environment, then postprocess `d'`.
-
-     Some parts of `d'` may lie inside and outside the evaluation boundary,
-     use `pp_eval` and `pp_uneval` as necessary.
-     */
   | Closure(env, d) =>
     let* env =
       Util.TimeUtil.measure_time("pp_eval_env/Closure", true, () =>
@@ -200,15 +195,9 @@ let rec pp_eval = (d: DHExp.t): m(DHExp.t) =>
         Util.TimeUtil.measure_time("pp_uneval_rules", true, () =>
           pp_uneval_rules(env, rules)
         );
-      ConsistentCase(Case(scrut, rules, i)) |> return;
+      ConsistentCase(Case(scrut, rules, i))
+      |> return /* Hole constructs inside closures.             `NonEmptyHole` and `InconsistentBranches` have subexpressions that          lie inside the evaluation boundary, and need to be handled differently          than in `pp_uneval`. The other hole types don't have any evaluated          subexpressions and we can use `pp_uneval`.          */;
 
-    /* Hole constructs inside closures.
-
-       `NonEmptyHole` and `InconsistentBranches` have subexpressions that
-       lie inside the evaluation boundary, and need to be handled differently
-       than in `pp_uneval`. The other hole types don't have any evaluated
-       subexpressions and we can use `pp_uneval`.
-       */
     | NonEmptyHole(reason, u, _, d) =>
       let* d = pp_eval(d);
       let* i = hii_add_instance(u, env);
@@ -222,14 +211,13 @@ let rec pp_eval = (d: DHExp.t): m(DHExp.t) =>
 
     | EmptyHole(_)
     | FreeVar(_)
-    | InvalidText(_) => pp_uneval(env, d)
+    | InvalidText(_) =>
+      pp_uneval(env, d) /* Other expression forms cannot be directly in a closure. */
 
-    /* Other expression forms cannot be directly in a closure. */
     | _ => raise(Exception(InvalidClosureBody))
     };
-  }
+  } /* Recurse through environments, using memoized result if available. */
 
-/* Recurse through environments, using memoized result if available. */
 and pp_eval_env = (env: ClosureEnvironment.t): m(ClosureEnvironment.t) => {
   let ei = env |> ClosureEnvironment.id_of;
 
@@ -271,9 +259,8 @@ and pp_uneval = (env: ClosureEnvironment.t, d: DHExp.t): m(DHExp.t) =>
     switch (ClosureEnvironment.lookup(env, x)) {
     | Some(d') => d' |> return
     | None => d |> return
-    }
+    } /* Non-hole expressions: expand recursively */
 
-  /* Non-hole expressions: expand recursively */
   | BoolLit(_)
   | IntLit(_)
   | FloatLit(_)
@@ -404,16 +391,11 @@ and pp_uneval = (env: ClosureEnvironment.t, d: DHExp.t): m(DHExp.t) =>
   | ConsistentCase(Case(scrut, rules, i)) =>
     let* scrut' = pp_uneval(env, scrut);
     let* rules' = pp_uneval_rules(env, rules);
-    ConsistentCase(Case(scrut', rules', i)) |> return;
+    ConsistentCase(Case(scrut', rules', i))
+    |> return /* Closures shouldn't exist inside other closures */;
 
-  /* Closures shouldn't exist inside other closures */
-  | Closure(_) => raise(Exception(ClosureInsideClosure))
+  | Closure(_) => raise(Exception(ClosureInsideClosure)) /* Hole expressions:   - Use the closure environment as the hole environment.   - Number the hole instance appropriately.   - Recurse through inner expression (if any).   */
 
-  /* Hole expressions:
-     - Use the closure environment as the hole environment.
-     - Number the hole instance appropriately.
-     - Recurse through inner expression (if any).
-     */
   | EmptyHole(u, _) =>
     let* i = hii_add_instance(u, env);
     Closure(env, EmptyHole(u, i)) |> return;
@@ -522,9 +504,8 @@ let rec track_children_of_hole =
       track_children_of_hole_rules(hii, parent, rules)
     );
 
-  | ApBuiltin(_, d) => track_children_of_hole(hii, parent, d)
+  | ApBuiltin(_, d) => track_children_of_hole(hii, parent, d) /* Hole types */
 
-  /* Hole types */
   | NonEmptyHole(_, u, i, d) =>
     let hii = track_children_of_hole(hii, parent, d);
     hii |> HoleInstanceInfo.add_parent((u, i), parent);
@@ -535,11 +516,8 @@ let rec track_children_of_hole =
   | EmptyHole(u, i)
   | FreeVar(u, i, _)
   | InvalidText(u, i, _) =>
-    hii |> HoleInstanceInfo.add_parent((u, i), parent)
+    hii |> HoleInstanceInfo.add_parent((u, i), parent) /* The only thing that should exist in closures at this point   are holes. Ignore the hole environment, not necessary for   parent tracking. */
 
-  /* The only thing that should exist in closures at this point
-     are holes. Ignore the hole environment, not necessary for
-     parent tracking. */
   | Filter(_, d)
   | Closure(_, d) => track_children_of_hole(hii, parent, d)
   }
@@ -583,17 +561,14 @@ let postprocess = (d: DHExp.t): (HoleInstanceInfo.t, DHExp.t) => {
   let ((_, hii), d) =
     Util.TimeUtil.measure_time("pp_eval", true, () =>
       pp_eval(d, (EnvironmentIdMap.empty, HoleInstanceInfo_.empty))
-    );
+    ) /* Build hole instance info. */;
 
-  /* Build hole instance info. */
   let hii =
     Util.TimeUtil.measure_time("to_hii", true, () =>
       hii |> HoleInstanceInfo_.to_hole_instance_info
-    );
+    ) /* FIXME: Better way to do this? */ /* Add special hole acting as top-level expression (to act as parent
+     for holes directly in the result) */;
 
-  /* Add special hole acting as top-level expression (to act as parent
-     for holes directly in the result) */
-  /* FIXME: Better way to do this? */
   let (u_result, _) = HoleInstance.result;
   let hii =
     MetaVarMap.add(
@@ -613,8 +588,7 @@ let postprocess = (d: DHExp.t): (HoleInstanceInfo.t, DHExp.t) => {
   let hii =
     Util.TimeUtil.measure_time("track_children", true, () =>
       hii |> track_children
-    );
+    ) /* Perform hole parent tracking. */;
 
-  /* Perform hole parent tracking. */
   (hii, d);
 };

@@ -1,8 +1,8 @@
 /*
-     This module adds helpers for creating s-expressions that use some structural sharing
-     (https://www.ocamlwiki.com/wiki/Structural_sharing) instead of copying all instances
-     of the same record.
- */
+      This module adds helpers for creating s-expressions that use some structural sharing
+      (https://www.ocamlwiki.com/wiki/Structural_sharing) instead of copying all instances
+      of the same record.
+  */
 
 let structure_share_map: ref(option(Id.Map.t(Sexplib.Sexp.t))) = ref(None);
 

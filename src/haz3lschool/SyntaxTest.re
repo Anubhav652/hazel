@@ -1,12 +1,5 @@
 open Haz3lcore;
-open Sexplib.Std;
-
-/*
-  These are the syntax test functions used for the syntax validation
-  section of the exercises. The syntax tests are designed to
-  ensure that the user implementation satisfies certain syntax properties
-  e.g. tail recursive function or variable usage.
- */
+open Sexplib.Std /*   These are the syntax test functions used for the syntax validation   section of the exercises. The syntax tests are designed to   ensure that the user implementation satisfies certain syntax properties   e.g. tail recursive function or variable usage.  */;
 
 [@deriving (show({with_path: false}), sexp, yojson)]
 type syntax_result = {
@@ -33,17 +26,10 @@ let rec find_var_upat = (name: string, upat: Term.UPat.t): bool => {
     List.fold_left((acc, up) => {acc || find_var_upat(name, up)}, false, l)
   | Parens(up) => find_var_upat(name, up)
   | Ap(up1, up2) => find_var_upat(name, up1) || find_var_upat(name, up2)
-  | TypeAnn(up, _) => find_var_upat(name, up)
+  | TypeAnn(up, _) => find_var_upat(name, up) /*   Helper function used in the function find_fn which takes the   pattern (upat) and the definition (def) of a let expression and   collects functions in def that are bound to variable name in   upat. Example: for the expression "let (a,b) = (fun x -> x+1, 41) in"   if name="a", then l=[fun x -> x+1]  */
   };
 };
 
-/*
-  Helper function used in the function find_fn which takes the
-  pattern (upat) and the definition (def) of a let expression and
-  collects functions in def that are bound to variable name in
-  upat. Example: for the expression "let (a,b) = (fun x -> x+1, 41) in"
-  if name="a", then l=[fun x -> x+1]
- */
 let rec find_in_let =
         (
           name: string,
@@ -80,13 +66,11 @@ let rec find_in_let =
       Cons(_, _) |
       Ap(_, _),
       _,
-    ) => l
+    ) =>
+    l /*  Find any function expressions in uexp that are bound to variable name  */
   };
 };
 
-/*
- Find any function expressions in uexp that are bound to variable name
- */
 let rec find_fn =
         (name: string, uexp: Term.UExp.t, l: list(Term.UExp.t))
         : list(Term.UExp.t) => {
@@ -132,13 +116,11 @@ let rec find_fn =
   | Float(_)
   | String(_)
   | Constructor(_)
-  | Var(_) => l
+  | Var(_) =>
+    l /*  Finds whether variable name is ever mentioned in upat.  */
   };
 };
 
-/*
- Finds whether variable name is ever mentioned in upat.
- */
 let rec var_mention_upat = (name: string, upat: Term.UPat.t): bool => {
   switch (upat.term) {
   | Var(x) => x == name
@@ -164,13 +146,10 @@ let rec var_mention_upat = (name: string, upat: Term.UPat.t): bool => {
   | Parens(up) => var_mention_upat(name, up)
   | Ap(up1, up2) =>
     var_mention_upat(name, up1) || var_mention_upat(name, up2)
-  | TypeAnn(up, _) => var_mention_upat(name, up)
+  | TypeAnn(up, _) => var_mention_upat(name, up) /*  Finds whether variable name is ever mentioned in uexp.  */
   };
 };
 
-/*
- Finds whether variable name is ever mentioned in uexp.
- */
 let rec var_mention = (name: string, uexp: Term.UExp.t): bool => {
   switch (uexp.term) {
   | Var(x) => x == name
@@ -218,14 +197,13 @@ let rec var_mention = (name: string, uexp: Term.UExp.t): bool => {
          },
          false,
          l,
-       )
-  };
-};
-
-/*
+       ) /*
  Finds whether variable name is applied on another expresssion.
  i.e. Ap(Var(name), u) occurs anywhere in the uexp.
  */
+  };
+};
+
 let rec var_applied = (name: string, uexp: Term.UExp.t): bool => {
   switch (uexp.term) {
   | Var(_)
@@ -288,13 +266,12 @@ let rec var_applied = (name: string, uexp: Term.UExp.t): bool => {
          },
          false,
          l,
-       )
+       ) /*
+ Check whether all functions bound to variable name are recursive.
+ */
   };
 };
 
-/*
- Check whether all functions bound to variable name are recursive.
- */
 let is_recursive = (name: string, uexp: Term.UExp.t): bool => {
   let fn_bodies = [] |> find_fn(name, uexp);
   if (List.length(fn_bodies) == 0) {
@@ -306,13 +283,12 @@ let is_recursive = (name: string, uexp: Term.UExp.t): bool => {
       fn_bodies,
     );
   };
-};
-
-/*
+} /*
  Check if variable name is not mentioned anywhere outside of
  a tail position in uexp. Note that if the variable is not
  mentioned anywhere in the expression, the function returns true.
- */
+ */;
+
 let rec tail_check = (name: string, uexp: Term.UExp.t): bool => {
   switch (uexp.term) {
   | EmptyHole
@@ -365,13 +341,12 @@ let rec tail_check = (name: string, uexp: Term.UExp.t): bool => {
           },
           true,
           l,
-        )
+        ) /*
+ Check whether all functions bound to variable name are tail recursive.
+ */
   };
 };
 
-/*
- Check whether all functions bound to variable name are tail recursive.
- */
 let is_tail_recursive = (name: string, uexp: Term.UExp.t): bool => {
   let fn_bodies = [] |> find_fn(name, uexp);
   if (List.length(fn_bodies) == 0) {

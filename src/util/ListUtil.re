@@ -359,9 +359,8 @@ let map2_opt =
   switch (List.map2(f, xs, ys)) {
   | b => Some(b)
   | exception (Invalid_argument(_)) => None
-  };
+  } /* repeat an element n times */;
 
-/* repeat an element n times */
 let replicate = (n: int, e: 'a): list('a) => {
   /* add c additional copies of e to xs */
   let rec f = (c, xs) =>
@@ -452,10 +451,8 @@ let assoc_err = (x, xs, err: string) =>
   };
 
 let update_assoc = ((k, v)) =>
-  List.map(((k', v')) => k == k' ? (k, v) : (k', v'));
+  List.map(((k', v')) => k == k' ? (k, v) : (k', v')) /* Give a list of optional 'a, split the * list up using the Nones as dividers */;
 
-/* Give a list of optional 'a, split the
- * list up using the Nones as dividers */
 let split_at_nones = (xs: list(option('a))): list(list('a)) => {
   let rec go = (xs, acc) =>
     switch (xs) {
@@ -468,10 +465,9 @@ let split_at_nones = (xs: list(option('a))): list(list('a)) => {
       }
     };
   go(xs, []) |> List.map(List.rev) |> List.rev;
-};
+} /* Give a list of lists, return a list of pairs of
+ * the first and last element of each list. */;
 
-/* Give a list of lists, return a list of pairs of
- * the first and last element of each list. */
 let first_and_last = (xss: list(list('a))): list(('a, 'a)) =>
   xss
   |> List.filter_map(

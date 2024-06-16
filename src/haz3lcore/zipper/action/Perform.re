@@ -152,8 +152,7 @@ let go_z =
     |> Result.of_option(~error=Action.Failure.Cant_destruct)
   | Insert(char) =>
     z
-    |> Insert.go(char)
-    /* note: remolding here is done case-by-case */
+    |> Insert.go(char) /* note: remolding here is done case-by-case */
     //|> Option.map((z) => remold_regrout(Right, z))
     |> Result.of_option(~error=Action.Failure.Cant_insert)
   | Pick_up => Ok(remold_regrout(Left, Zipper.pick_up(z)))

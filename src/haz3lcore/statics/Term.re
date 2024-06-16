@@ -1,20 +1,20 @@
 /* TERM
 
-   These data structures define the term structures on which
-   the static and dynamic semantics of the language are based.
-   Each sort has a corresponding U<Sort> module.
+                  These data structures define the term structures on which
+                  the static and dynamic semantics of the language are based.
+                  Each sort has a corresponding U<Sort> module.
 
-   The contained cls type lists the terms of that sort, and
-   should be in 1-1 correspondence with the term type which
-   is used to build composite terms.
+                  The contained cls type lists the terms of that sort, and
+                  should be in 1-1 correspondence with the term type which
+                  is used to build composite terms.
 
-   This is wrapped in a record type to associate a unique id
-   with each term. These unique ids are the same as from the
-   tile structure from the syntax module, as there is a 1-1
-   correspondence between terms and tiles.
+                  This is wrapped in a record type to associate a unique id
+                  with each term. These unique ids are the same as from the
+                  tile structure from the syntax module, as there is a 1-1
+                  correspondence between terms and tiles.
 
-   TODO: add tests to check if there are forms and/or terms
-   without correponding syntax classes */
+                  TODO: add tests to check if there are forms and/or terms
+                  without correponding syntax classes */
 
 include TermBase.Any;
 type any = t;
@@ -175,11 +175,10 @@ module UTyp = {
     | Constructor(_)
     | Ap(_)
     | Sum(_)
-    | Rec(_) => false
+    | Rec(_) => false /* Converts a syntactic type into a semantic type */
     };
   };
 
-  /* Converts a syntactic type into a semantic type */
   let rec to_typ: (Ctx.t, t) => Typ.t =
     (ctx, utyp) =>
       switch (utyp.term) {
@@ -221,8 +220,8 @@ module UTyp = {
         Forall("?", to_typ(ctx, tbody))
       | Rec({term: Invalid(_), _}, tbody)
       | Rec({term: EmptyHole, _}, tbody)
-      | Rec({term: MultiHole(_), _}, tbody) => Rec("?", to_typ(ctx, tbody))
-      /* The below cases should occur only inside sums */
+      | Rec({term: MultiHole(_), _}, tbody) =>
+        Rec("?", to_typ(ctx, tbody)) /* The below cases should occur only inside sums */
       | Constructor(_)
       | Ap(_) => Unknown(Internal)
       }

@@ -337,13 +337,12 @@ let title_cell = title => {
     div(
       ~attr=Attr.class_("title-cell"),
       [div(~attr=Attr.class_("title-text"), [text(title)])],
-    ),
+    ) /* An editor view that is not selectable or editable,
+ * and does not show error holes or test results.
+ * Used in Docs to display the header example */,
   ]);
 };
 
-/* An editor view that is not selectable or editable,
- * and does not show error holes or test results.
- * Used in Docs to display the header example */
 let locked_no_statics =
     (
       ~inject,
@@ -370,11 +369,10 @@ let locked_no_statics =
     ~sort,
     segment |> Zipper.unzip |> Editor.init(~read_only=true),
   ),
-];
-
-/* An editor view that is not selectable or editable,
+] /* An editor view that is not selectable or editable,
  * but does show static errors, test results, and live values.
- * Used in Docs for examples */
+ * Used in Docs for examples */;
+
 let locked =
     (
       ~ui_state,

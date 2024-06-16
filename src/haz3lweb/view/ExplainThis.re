@@ -1,10 +1,7 @@
 open Virtual_dom.Vdom;
 open Node;
 open Util.Web;
-open Haz3lcore;
-
-/* If you are adding docs here for new syntax, see PipelineExp.re
- * which documents the simplest way to add a new form. */
+open Haz3lcore /* If you are adding docs here for new syntax, see PipelineExp.re * which documents the simplest way to add a new form. */;
 
 let feedback_view = (message, up_active, up_action, down_active, down_action) => {
   div(
@@ -117,16 +114,15 @@ let highlight =
     | None => classes
     };
   (Node.span(~attr, msg), mapping);
-};
-
-/*
+} /*
  Markdown like thing:
  highlighty thing : [thing to highlight](id)
  bulleted list: - list item
                 - list item
  code: `code`
  italics: *word*
- */
+ */;
+
 let mk_translation = (~inject, text: string): (list(Node.t), ColorSteps.t) => {
   let omd = Omd.of_string(text);
   //print_markdown(omd);
@@ -147,7 +143,10 @@ let mk_translation = (~inject, text: string): (list(Node.t), ColorSteps.t) => {
               ([], mapping),
               items,
             );
-          (List.append(msg, [Node.ul(bullets)]), mapping); /* TODO Hannah - Should this be an ordered list instead of an unordered list? */
+          (
+            List.append(msg, [Node.ul(bullets)]),
+            mapping /* TODO Hannah - Should this be an ordered list instead of an unordered list? */,
+          );
         | Code(_name, t) => (List.append(msg, [code_node(t)]), mapping)
         | Url(id, d, _title) =>
           let (d, mapping) = translate(d, mapping);
@@ -507,9 +506,8 @@ let get_doc =
       let (_, color_map) = mk_translation(~inject=None, explanation_msg);
       ([], ([], color_map), []);
     };
-  };
+  } /* Use this when adding new entries */;
 
-  /* Use this when adding new entries */
   let message_single = (e: ExplainThisForm.Simple.t) => {
     let (explanation, colorings, group) = ExplainThisForm.Simple.to_group(e);
     get_message(~colorings, ~format=None, ~explanation, group);
@@ -580,8 +578,7 @@ let get_doc =
               ),
             group_id,
           );
-        };
-        /* TODO: More could be done here probably for different patterns. */
+        } /* TODO: More could be done here probably for different patterns. */;
         basic(TypFunctionExp.type_functions_basic);
       | Fun(pat, body) =>
         let basic = group_id => {

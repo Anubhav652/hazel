@@ -68,7 +68,7 @@ let view =
   let caret_adj_px =
     //TODO(andrew): figure out why we need this mystery pixel below
     (-1.) +. caret_adj *. font_metrics.col_width;
-  let max_disp = 3; /* Maximum vertical backpack displacement */
+  let max_disp = 3 /* Maximum vertical backpack displacement */;
   let vertical_disp = origin.row <= max_disp ? origin.row : max_disp;
   let selections_style =
     Printf.sprintf(

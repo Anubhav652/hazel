@@ -1,13 +1,4 @@
-open DHExp;
-
-/*
-   Built-in functions for Hazel.
-
-   To add a built-in function or constant, write the implementation in the
-   `Pervasives.Impls` module below and add it to `builtins`.
-
-   See the existing ones for reference.
- */
+open DHExp /*     Built-in functions for Hazel.       To add a built-in function or constant, write the implementation in the     `Pervasives.Impls` module below and add it to `builtins`.       See the existing ones for reference.   */;
 
 [@deriving (show({with_path: false}), sexp, yojson)]
 type builtin =

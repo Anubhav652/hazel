@@ -17,9 +17,8 @@ module rec Typ: {
     | SynSwitch
     | TypeHole
     | Free(TypVar.t)
-    | Internal;
+    | Internal /* TYP.T: Hazel types */;
 
-  /* TYP.T: Hazel types */
   [@deriving (show({with_path: false}), sexp, yojson)]
   type t =
     | Unknown(type_provenance)
@@ -37,12 +36,8 @@ module rec Typ: {
   and sum_map = ConstructorMap.t(option(t));
 
   [@deriving (show({with_path: false}), sexp, yojson)]
-  type sum_entry = ConstructorMap.binding(option(t));
+  type sum_entry = ConstructorMap.binding(option(t)) /* Hazel type annotated with a relevant source location.   Currently used to track match branches for inconsistent   branches errors, but could perhaps be used more broadly   for type debugging UI. */;
 
-  /* Hazel type annotated with a relevant source location.
-     Currently used to track match branches for inconsistent
-     branches errors, but could perhaps be used more broadly
-     for type debugging UI. */
   [@deriving (show({with_path: false}), sexp, yojson)]
   type source = {
     id: Id.t,
@@ -79,9 +74,8 @@ module rec Typ: {
     | SynSwitch
     | TypeHole
     | Free(TypVar.t)
-    | Internal;
+    | Internal /* TYP.T: Hazel types */;
 
-  /* TYP.T: Hazel types */
   [@deriving (show({with_path: false}), sexp, yojson)]
   type t =
     | Unknown(type_provenance)
@@ -105,15 +99,10 @@ module rec Typ: {
   type source = {
     id: Id.t,
     ty: t,
-  };
+  } /* Strip location information from a list of sources */;
 
-  /* Strip location information from a list of sources */
-  let of_source = List.map((source: source) => source.ty);
+  let of_source = List.map((source: source) => source.ty) /* How type provenance information should be collated when   joining unknown types. This probably requires more thought,   but right now TypeHole strictly predominates over Internal   which strictly predominates over SynSwitch. */;
 
-  /* How type provenance information should be collated when
-     joining unknown types. This probably requires more thought,
-     but right now TypeHole strictly predominates over Internal
-     which strictly predominates over SynSwitch. */
   let join_type_provenance =
       (p1: type_provenance, p2: type_provenance): type_provenance =>
     switch (p1, p2) {
@@ -201,10 +190,9 @@ module rec Typ: {
     switch (ty) {
     | Rec(x, ty_body) => subst(ty, x, ty_body)
     | _ => ty
-    };
+    } /* Type Equality: This coincides with alpha equivalence for normalized types.
+     Other types may be equivalent but this will not detect so if they are not normalized. */;
 
-  /* Type Equality: This coincides with alpha equivalence for normalized types.
-     Other types may be equivalent but this will not detect so if they are not normalized. */
   let rec eq_internal = (n: int, t1: t, t2: t) => {
     switch (t1, t2) {
     | (Rec(x1, t1), Rec(x2, t2))
@@ -242,13 +230,8 @@ module rec Typ: {
     };
   };
 
-  let eq = (t1: t, t2: t): bool => eq_internal(0, t1, t2);
+  let eq = (t1: t, t2: t): bool => eq_internal(0, t1, t2) /* Lattice join on types. This is a LUB join in the hazel2   sense in that any type dominates Unknown. The optional   resolve parameter specifies whether, in the case of a type   variable and a succesful join, to return the resolved join type,   or to return the (first) type variable for readability */;
 
-  /* Lattice join on types. This is a LUB join in the hazel2
-     sense in that any type dominates Unknown. The optional
-     resolve parameter specifies whether, in the case of a type
-     variable and a succesful join, to return the resolved join type,
-     or to return the (first) type variable for readability */
   let rec join =
           (~resolve=false, ~fix, ctx: Ctx.t, ty1: t, ty2: t): option(t) => {
     let join' = join(~resolve, ~fix, ctx);
@@ -275,8 +258,9 @@ module rec Typ: {
     | (ty, Var(name)) =>
       let* ty_name = Ctx.lookup_alias(ctx, name);
       let+ ty_join = join'(ty_name, ty);
-      !resolve && eq(ty_name, ty_join) ? Var(name) : ty_join;
-    /* Note: Ordering of Unknown, Var, and Rec above is load-bearing! */
+      !resolve && eq(ty_name, ty_join)
+        ? Var(name)
+        : ty_join /* Note: Ordering of Unknown, Var, and Rec above is load-bearing! */;
     | (Rec(x1, ty1), Rec(x2, ty2)) =>
       let ctx = Ctx.extend_dummy_tvar(ctx, x1);
       let+ ty_body =
@@ -286,13 +270,9 @@ module rec Typ: {
       let ctx = Ctx.extend_dummy_tvar(ctx, x1);
       let+ ty_body =
         join(~resolve, ~fix, ctx, subst(Var(x2), x1, ty1), ty2);
-      Forall(x1, ty_body);
-    /* Note for above: there is no danger of free variable capture as
-       subst itself performs capture avoiding substitution. However this
-       may generate internal type variable names that in corner cases can
-       be exposed to the user. We preserve the variable name of the
-       second type to preserve synthesized type variable names, which
-       come from user annotations. */
+      Forall
+        (x1, ty_body) /* Note for above: there is no danger of free variable capture as   subst itself performs capture avoiding substitution. However this   may generate internal type variable names that in corner cases can   be exposed to the user. We preserve the variable name of the   second type to preserve synthesized type variable names, which   come from user annotations. */;
+
     | (Rec(_), _) => None
     | (Forall(_), _) => None
     | (Int, Int) => Some(Int)
@@ -478,9 +458,8 @@ module rec Typ: {
     switch (ty) {
     | Unknown(_) => true
     | _ => false
-    };
+    } /* Does the type require parentheses when on the left of an arrow for printing? */;
 
-  /* Does the type require parentheses when on the left of an arrow for printing? */
   let needs_parens = (ty: t): bool =>
     switch (ty) {
     | Unknown(_)
@@ -495,9 +474,8 @@ module rec Typ: {
     | Arrow(_, _) => true
     | Prod(_)
     | Sum(_) => true /* disambiguate between (A + B) -> C and A + (B -> C) */
-    };
+    } /* Essentially recreates haz3lweb/view/Type.re's view_ty but with string output */;
 
-  /* Essentially recreates haz3lweb/view/Type.re's view_ty but with string output */
   let rec pretty_print = (ty: t): string =>
     switch (ty) {
     | Unknown(_) => "?"

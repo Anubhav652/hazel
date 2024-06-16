@@ -19,8 +19,7 @@ let handlers = (~inject: UpdateAction.t => Ui_effect.t(unit), model) => {
   [
     Attr.on_keypress(_ => Effect.Prevent_default),
     Attr.on_keyup(key_handler(~inject, ~dir=KeyUp)),
-    Attr.on_keydown(key_handler(~inject, ~dir=KeyDown)),
-    /* safety handler in case mousedown overlay doesn't catch it */
+    Attr.on_keydown(key_handler(~inject, ~dir=KeyDown)) /* safety handler in case mousedown overlay doesn't catch it */,
     Attr.on_mouseup(_ => inject(SetMeta(Mouseup))),
     Attr.on_blur(_ => {
       JsUtil.focus_clipboard_shim();

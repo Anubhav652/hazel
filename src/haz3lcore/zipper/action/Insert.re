@@ -92,11 +92,9 @@ let expand_neighbors_and_make_new_tile = (char: Token.t, state: t): option(t) =>
      barf the "then", before it is buried by the ")" added to the BP.
      The order here could be revisited if barfing was more sophisticated.
      */
-  let* z = expand_or_barf_left_neighbor(state);
+  let* z = expand_or_barf_left_neighbor(state) /* Note to david: I'm not sure why the above regrout is necessary.   Without it, there is a Nonconvex segment error thrown in exactly   one case, the double barf case: insert space on "if then|else" */;
+
   //let (z) = regrout(Left, z);
-  /* Note to david: I'm not sure why the above regrout is necessary.
-     Without it, there is a Nonconvex segment error thrown in exactly
-     one case, the double barf case: insert space on "if then|else" */
   let+ z = expand_or_barf_right_neighbor(z);
   make_new_tile(char, Left, z);
 };
@@ -202,22 +200,15 @@ let go =
     Some(z)
   | (Inner(d_idx, n), (_, Some(t))) =>
     let idx = n + 1;
-    let new_t = Token.insert_nth(idx, char, t);
-    /* If inserting wouldn't produce a valid token, split. This is
-     * mostly targetting the case of inserting an infix operator
-     * inside an operand (or more rarely vice-versa). In such cases,
-     * due to the current MOSTLY disjointedness of these character
-     * classes, ALL (ish?) current splits should be 3-way
-     * splits (as opposed to 2-way). This is currently the only
-     * kind of splitting supported; this should be revisited if
-     * we move to more subtle token division logic */
+    let new_t = Token.insert_nth(idx, char, t) /* If inserting wouldn't produce a valid token, split. This is * mostly targetting the case of inserting an infix operator * inside an operand (or more rarely vice-versa). In such cases, * due to the current MOSTLY disjointedness of these character * classes, ALL (ish?) current splits should be 3-way * splits (as opposed to 2-way). This is currently the only * kind of splitting supported; this should be revisited if * we move to more subtle token division logic */;
+
     Molds.allow_insertion(char, t, new_t)
       ? z
         |> Zipper.set_caret(Inner(d_idx, idx))
         |> Zipper.replace_mono(Right, new_t)
         |> opt_regrold(Left)
-      : split(z, char, idx, t) |> opt_regrold(Right);
-  /* Can't insert inside delimiter */
+      : split(z, char, idx, t)
+        |> opt_regrold(Right) /* Can't insert inside delimiter */;
   | (Inner(_, _), (_, None)) => None
   | (Outer, (_, Some(_))) =>
     let caret: Zipper.Caret.t =

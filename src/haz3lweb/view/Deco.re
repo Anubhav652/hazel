@@ -138,11 +138,7 @@ module Deco =
       | Some(range) =>
         let tiles =
           Id.Map.find(Piece.id(p), M.terms)
-          |> Term.ids
-          /* NOTE(andrew): dark_ids were originally filtered here.
-           * Leaving this comment in place in case issues in the
-           * future are traced back to here.
-           * |> List.filter(id => id >= 0)*/
+          |> Term.ids /* NOTE(andrew): dark_ids were originally filtered here. * Leaving this comment in place in case issues in the * future are traced back to here. * |> List.filter(id => id >= 0)*/
           |> List.map(id => {
                let t = tile(id);
                (id, t.mold, Measured.find_shards(t, M.map));

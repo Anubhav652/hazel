@@ -1,12 +1,5 @@
-open Sexplib.Std;
+open Sexplib.Std /*   ModelResults is used to store the results of   evaluations requested by the current editor mode,   with the key distinguishing these requests.     See the SchoolExercise module for an example.   */;
 
-/*
- ModelResults is used to store the results of
- evaluations requested by the current editor mode,
- with the key distinguishing these requests.
-
- See the SchoolExercise module for an example.
- */
 module Key = {
   include String;
   [@deriving (show({with_path: false}), sexp, yojson)]

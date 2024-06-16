@@ -87,15 +87,14 @@ let lookup_statics =
   | Exercises(_, _, exercise) =>
     let key = Exercise.key_for_statics(exercise);
     CachedStatics.lookup(statics, key);
-  };
-
-/* Each mode (e.g. Scratch, School) requires
+  } /* Each mode (e.g. Scratch, School) requires
    elaborating on some number of expressions
    that are spliced together from the editors
    in the mode. Each elaborated expression
    is given a key for later lookup by the mode.
 
-   Used in the Update module */
+   Used in the Update module */;
+
 let get_spliced_elabs =
     (~settings: Settings.t, statics, editors: t)
     : list((ModelResults.key, DHExp.t)) =>

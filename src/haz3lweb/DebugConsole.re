@@ -1,8 +1,4 @@
-open Haz3lcore;
-
-/* This is a place to add ad-hoc debugging print actions.
-   It was originally directly in Keyboard, but that added a handler
-   dependency on the model, which is technically against architecture */
+open Haz3lcore /* This is a place to add ad-hoc debugging print actions.   It was originally directly in Keyboard, but that added a handler   dependency on the model, which is technically against architecture */;
 
 let print = ({settings, editors, _}: Model.t, key: string): unit => {
   let z = Editors.get_zipper(editors);

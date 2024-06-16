@@ -201,8 +201,7 @@ let schedule_evaluation = (~schedule_action, model: Model.t): unit =>
           rqs =>
             schedule_action(UpdateResult(ModelResults.timeout_all(rqs))),
       );
-    };
-    /* Not sending stepper to worker for now bc closure perf */
+    } /* Not sending stepper to worker for now bc closure perf */;
     let step_rs = ModelResults.to_step(model.results);
     if (!ModelResults.is_empty(step_rs)) {
       let new_rs =
@@ -239,9 +238,8 @@ let perform_action = (model: Model.t, a: Action.t): Result.t(Model.t) =>
   ) {
   | Error(err) => Error(FailedToPerform(err))
   | Ok(ed) =>
-    let model = {...model, editors: Editors.put_editor(ed, model.editors)};
-    /* Note: Not saving here as saving is costly to do each keystroke,
-       we wait a second after the last edit action (see Main.re) */
+    let model = {...model, editors: Editors.put_editor(ed, model.editors)} /* Note: Not saving here as saving is costly to do each keystroke,   we wait a second after the last edit action (see Main.re) */;
+
     Ok(model);
   };
 
@@ -270,9 +268,7 @@ let switch_exercise_editor =
     //Note: now saving after each edit (delayed by 1 second) so no need to save here
     //Store.Exercise.save_exercise(exercise, ~instructor_mode);
     Some(Exercises(m, specs, exercise));
-  };
-
-/* This action saves a file which serializes all current editor
+  } /* This action saves a file which serializes all current editor
    settings, including the states of all Scratch and Example slides.
    This saved file can directly replace Haz3lweb/Init.ml, allowing
    you to make your current state the default startup state.
@@ -280,7 +276,8 @@ let switch_exercise_editor =
    This does NOT save any Exercises mode state or any langdocs
    state. The latter is intentional as we don't want to persist
    this between users. The former is a TODO, currently difficult
-   due to the more complex architecture of Exercises. */
+   due to the more complex architecture of Exercises. */;
+
 let export_persistent_data = () => {
   let settings = Store.Settings.load();
   let data: PersistentData.t = {

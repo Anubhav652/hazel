@@ -137,9 +137,8 @@ let space = () => mk_secondary(Form.space);
 let mk_example = str => {
   switch (Printer.zipper_of_string(str)) {
   | None => []
-  | Some(z) => Zipper.zip(z)
+  | Some(z) => Zipper.zip(z) /* Int param below should be ~ width of sidebar */
   };
 };
 
-/* Int param below should be ~ width of sidebar */
 let abbreviate = Util.StringUtil.abbreviate(20);
